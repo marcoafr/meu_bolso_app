@@ -1,30 +1,125 @@
 // src/components/Navbar.tsx
 
-import { AppBar, Toolbar, Typography, Button } from "@mui/material";
+import { AppBar, Toolbar, Typography, Button, Box, IconButton, Drawer, List, ListItem, ListItemText } from "@mui/material";
+import { Menu as MenuIcon } from "@mui/icons-material";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../authContext";
+import logonotext from '../images/logonotext.png';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth(); // Usando o logout do AuthContext
-  
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   // Realiza o logout usando o método do AuthContext
   const handleLogout = () => {
     logout(); // Chama o método logout do AuthContext
     navigate("/login"); // Redireciona para o login
   };
 
+  // Função auxiliar para navegação
+  const handleNavigation = (path: string) => {
+    navigate(path);
+  };
+
+  // Alterna o estado do menu mobile
+  const toggleDrawer = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  // Links para navegação
+  const navigationLinks = [
+    { label: "Dashboard", path: "/dashboard" },
+    { label: "Registrar Transação", path: "/registerTransaction" },
+    { label: "Transações", path: "/transactions" },
+    { label: "Categorias", path: "/categories" },
+    { label: "Orçamentos", path: "/budgets" },
+    { label: "Bancos e Cartões", path: "/banksAndCards" },
+  ];
+
   return (
-    <AppBar position="sticky">
-      <Toolbar>
-        <Typography variant="h4" sx={{ flexGrow: 1 }}>
-          Olá, {user?.name || 'Usuário'}
-        </Typography>
-        <Button color="inherit" onClick={handleLogout}>
-          Sair
-        </Button>
-      </Toolbar>
-    </AppBar>
+    <>
+      <AppBar position="sticky">
+        <Toolbar>
+          <Box
+            component="img"
+            src={logonotext}
+            alt="Logo"
+            sx={{
+              maxWidth: { xs: '8%', sm: '4%' },
+              maxHeight: '40%',
+              objectFit: 'contain',
+            }}
+          />
+          <Typography variant="h6" sx={{ flexGrow: 1, ml: 2 }}>
+            Olá, {user?.name || 'Usuário'}
+          </Typography>
+          {/* Menu para telas maiores */}
+          <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 2 }}>
+            {navigationLinks.map((link) => (
+              <Button key={link.path} color="inherit" onClick={() => handleNavigation(link.path)}>
+                {link.label}
+              </Button>
+            ))}
+            <Button color="inherit" onClick={handleLogout}>
+              Sair
+            </Button>
+          </Box>
+
+          {/* Ícone do menu para mobile */}
+          <IconButton
+            color="inherit"
+            edge="end"
+            sx={{ display: { sm: 'none' } }} // Mostra apenas no mobile
+            onClick={toggleDrawer}
+          >
+            <MenuIcon />
+          </IconButton>
+        </Toolbar>
+      </AppBar>
+
+      {/* Drawer para telas menores */}
+      <Drawer
+        anchor="right"
+        open={mobileOpen}
+        onClose={toggleDrawer}
+        sx={{
+          '& .MuiDrawer-paper': { width: '75%' },
+        }}
+      >
+        <List>
+          {navigationLinks.map((link) => (
+            <ListItem
+              key={link.path}
+              component="button" // Substitui "button"
+              onClick={() => {
+                handleNavigation(link.path); // Navigate to the link
+                toggleDrawer(); // Close the drawer
+              }}
+              sx={{
+                textAlign: 'left',
+                width: '100%',
+                padding: '10px 16px',
+              }}
+            >
+              <ListItemText primary={link.label} />
+            </ListItem>
+          ))}
+          <ListItem
+            component="button"
+            onClick={handleLogout}
+            sx={{
+              textAlign: 'left',
+              width: '100%',
+              padding: '10px 16px',
+            }}
+          >
+            <ListItemText primary="Sair" />
+          </ListItem>
+        </List>
+      </Drawer>
+    </>
   );
 };
 

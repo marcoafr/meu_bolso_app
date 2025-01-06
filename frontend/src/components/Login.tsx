@@ -5,6 +5,7 @@ import { TextField, Button, Box, Typography, Alert } from "@mui/material";
 import { login as apiLogin } from "../api";  // Função de login da API
 import { useAuth } from "../authContext";  // Função de login do AuthContext
 import { useNavigate } from "react-router-dom";
+import logo from '../images/logo.png';
 
 const Login = () => {
   const [loginInput, setLogin] = useState("");
@@ -68,9 +69,23 @@ const Login = () => {
             overflow: 'hidden',  // Impede o scroll horizontal ou vertical
         }}
     >
-      <Typography variant="h5" gutterBottom>
-        Meu Bolso - Login
-      </Typography>
+      {
+        /*
+          <Typography variant="h5" gutterBottom>
+            Meu Bolso - Login
+          </Typography>
+        */
+      }
+      <img 
+        src={logo} 
+        alt="Logo" 
+        style={{
+          maxWidth: '40%', 
+          maxHeight: '40%', 
+          objectFit: 'contain', // Garante que a imagem fique proporcional
+          marginBottom: '16px' // Espaço entre a imagem e o formulário
+        }}
+      />
       <form onSubmit={handleSubmit} style={{ width: '100%' }}>
         <TextField
           label="Login"
