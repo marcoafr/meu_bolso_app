@@ -1,0 +1,118 @@
+-- Criar a tabela users
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    login VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    type INTEGER NOT NULL DEFAULT 1 CHECK (type IN (0, 1)), -- 0 - admin, 1 - user
+    status INTEGER NOT NULL DEFAULT 0 CHECK (status IN (0, 1)), -- 0 - active, 1 - inactive
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Criar a tabela categories
+CREATE TABLE categories (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    type INTEGER NOT NULL CHECK (type IN (0, 1)), -- 0 - receipt, 1 - expense
+    user_id BIGINT NOT NULL REFERENCES users(id),
+    status INTEGER NOT NULL DEFAULT 0 CHECK (status IN (0, 1)), -- 0 - active, 1 - inactive
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Criar a tabela category_budgets
+CREATE TABLE category_budgets (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    amount NUMERIC(11, 2) NOT NULL,
+    status INTEGER NOT NULL DEFAULT 0 CHECK (status IN (0, 1)), -- 0 - active, 1 - inactive
+    category_id BIGINT NOT NULL REFERENCES categories(id),
+    user_id BIGINT NOT NULL REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Criar a tabela bank_accounts
+CREATE TABLE bank_accounts (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    color CHAR(7) CHECK (color ~ '^#[0-9A-Fa-f]{6}$'),
+    initial_amount NUMERIC(11, 2) DEFAULT 0,
+    user_id BIGINT NOT NULL REFERENCES users(id),
+        status INTEGER NOT NULL DEFAULT 0 CHECK (status IN (0, 1)), -- 0 - active, 1 - inactive
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Criar a tabela credit_cards
+CREATE TABLE credit_cards (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    color VARCHAR(7) NOT NULL, -- Cor no formato hexadecimal (#RRGGBB)
+    closing_day INTEGER NOT NULL CHECK (closing_day BETWEEN 0 AND 31),
+    paying_day INTEGER NOT NULL CHECK (paying_day BETWEEN 0 AND 31),
+    user_id BIGINT NOT NULL REFERENCES users(id),
+    status INTEGER NOT NULL DEFAULT 0 CHECK (status IN (0, 1)), -- 0 - active, 1 - inactive
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Criar a tabela transactions
+CREATE TABLE transactions ( 
+    id BIGSERIAL PRIMARY KEY, 
+    total_amount NUMERIC(11, 2) NOT NULL, 
+    issue_date DATE NOT NULL, 
+    status INTEGER NOT NULL CHECK (status IN (0, 1, 2, 3, 4)), -- 0 - Pending, 1 - Paid, 2 - Partially Paid, 3 - Canceled, 4 - Deleted;
+    category_id BIGINT NOT NULL REFERENCES categories(id), 
+    credit_card_id BIGINT REFERENCES credit_cards(id), 
+    user_id BIGINT NOT NULL REFERENCES users(id), 
+    correlation_id VARCHAR(255), 
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+);
+
+-- Criar a tabela receivables
+CREATE TABLE receivables ( 
+    id BIGSERIAL PRIMARY KEY, 
+    total_amount NUMERIC(11, 2) NOT NULL, 
+    discount_amount NUMERIC(11, 2) DEFAULT 0, 
+    tax_amount NUMERIC(11, 2) DEFAULT 0, 
+    paid_amount NUMERIC(11, 2) DEFAULT 0, 
+    status INTEGER NOT NULL CHECK (status IN (0, 1, 3, 4)), -- 0 - Pending, 1 - Paid, 3 - Canceled, 4 - Deleted;
+    transaction_id BIGINT NOT NULL REFERENCES transactions(id), 
+    user_id BIGINT NOT NULL REFERENCES users(id),
+    bank_account_id BIGINT REFERENCES bank_accounts(id),
+    metadata JSONB, 
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+);
+
+-- Inserir usuário inicial
+INSERT INTO users (name, email, login, password, type)
+VALUES ('Marco', 'marcoafr@live.com', '21232f297a57a5a743894a0e4a801fc3', 'e3274be5c857fb42ab72d786e281b4b8', 0);
+
+-- Inserir categoria inicial vinculada ao último ID de usuário gerado
+INSERT INTO categories (name, type, user_id)
+VALUES ('Supermercado', 1, currval(pg_get_serial_sequence('users', 'id')));
+
+-- Inserir orçamento de categoria inicial vinculado à categoria criada
+INSERT INTO category_budgets (name, amount, category_id, user_id)
+VALUES ('Meta Supermercado', 500, currval(pg_get_serial_sequence('categories', 'id')), currval(pg_get_serial_sequence('users', 'id')));
+
+-- Inserir conta bancária inicial
+INSERT INTO bank_accounts (name, color, initial_amount, user_id)
+VALUES ('NuBank', '#A020F0', 1000, currval(pg_get_serial_sequence('users', 'id')));
+
+-- Inserir cartão de crédito inicial
+INSERT INTO credit_cards (name, color, closing_day, paying_day, user_id)
+VALUES ('C6 Bank', '#A8A2AB', 24, 1, currval(pg_get_serial_sequence('users', 'id')));
+
+-- Inserir transação única
+INSERT INTO transactions (total_amount, issue_date, category_id, user_id, status)
+VALUES (200, '2024-12-01', currval(pg_get_serial_sequence('categories', 'id')), currval(pg_get_serial_sequence('users', 'id')), 0);
+
+-- Inserir receivable único
+INSERT INTO receivables (total_amount, status, transaction_id, user_id)
+VALUES (200, 0, currval(pg_get_serial_sequence('transactions', 'id')), currval(pg_get_serial_sequence('users', 'id')));

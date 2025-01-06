@@ -1,0 +1,16 @@
+C:\Users\marco\Desktop\Cursos\MBA\TCC (Meu Bolso)\backend\src\main\java\br\com\app\model\Category.java
+C:\Users\marco\Desktop\Cursos\MBA\TCC (Meu Bolso)\backend\src\main\java\br\com\app\model\User.java
+C:\Users\marco\Desktop\Cursos\MBA\TCC (Meu Bolso)\backend\src\main\java\br\com\app\dto\LoginRequest.java
+C:\Users\marco\Desktop\Cursos\MBA\TCC (Meu Bolso)\backend\src\main\java\br\com\app\controller\UserController.java
+C:\Users\marco\Desktop\Cursos\MBA\TCC (Meu Bolso)\backend\src\main\java\br\com\app\Constants.java
+C:\Users\marco\Desktop\Cursos\MBA\TCC (Meu Bolso)\backend\src\main\java\br\com\app\config\WebConfig.java
+C:\Users\marco\Desktop\Cursos\MBA\TCC (Meu Bolso)\backend\src\main\java\br\com\app\dto\LoginResponse.java
+C:\Users\marco\Desktop\Cursos\MBA\TCC (Meu Bolso)\backend\src\main\java\br\com\app\service\UserService.java
+C:\Users\marco\Desktop\Cursos\MBA\TCC (Meu Bolso)\backend\src\main\java\br\com\app\exception\AuthenticationException.java
+C:\Users\marco\Desktop\Cursos\MBA\TCC (Meu Bolso)\backend\src\main\java\br\com\app\service\CategoryService.java
+C:\Users\marco\Desktop\Cursos\MBA\TCC (Meu Bolso)\backend\src\main\java\br\com\app\controller\CategoryController.java
+C:\Users\marco\Desktop\Cursos\MBA\TCC (Meu Bolso)\backend\src\main\java\br\com\app\MyApplication.java
+C:\Users\marco\Desktop\Cursos\MBA\TCC (Meu Bolso)\backend\src\main\java\br\com\app\controller\AuthController.java
+C:\Users\marco\Desktop\Cursos\MBA\TCC (Meu Bolso)\backend\src\main\java\br\com\app\repository\CategoryRepository.java
+C:\Users\marco\Desktop\Cursos\MBA\TCC (Meu Bolso)\backend\src\main\java\br\com\app\repository\UserRepository.java
+C:\Users\marco\Desktop\Cursos\MBA\TCC (Meu Bolso)\backend\src\main\java\br\com\app\service\AuthService.java

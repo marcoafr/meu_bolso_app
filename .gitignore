@@ -1,0 +1,18 @@
+# Environment Variables
+*.env
+
+# Node.js
+/frontend/node_modules/
+/dist/
+/build/
+
+# Java
+/target/
+
+# Database files
+/db/data/
+
+# IDEs
+/.idea/
+/.vscode/
+*.iml
