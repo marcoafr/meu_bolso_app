@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { TextField, Button, Box, Typography, Alert } from "@mui/material";
-import { login as apiLogin } from "../api";  // Função de login da API
+import { login as apiLogin } from "../api/authService";  // Função de login da API
 import { useAuth } from "../authContext";  // Função de login do AuthContext
 import { useNavigate } from "react-router-dom";
 import logo from '../images/logo.png';

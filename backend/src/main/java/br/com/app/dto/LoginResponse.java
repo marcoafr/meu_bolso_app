@@ -13,6 +13,10 @@ public class LoginResponse {
         this.token = token;
     }
 
+    public Long getUserId() {
+        return userId;
+    }
+
     public String getName() {
         return name;
     }
