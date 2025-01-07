@@ -69,6 +69,7 @@ CREATE TABLE transactions (
     credit_card_id BIGINT REFERENCES credit_cards(id), 
     user_id BIGINT NOT NULL REFERENCES users(id), 
     correlation_id VARCHAR(255), 
+    description VARCHAR(255), 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
 );
