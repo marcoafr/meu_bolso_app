@@ -41,7 +41,7 @@ CREATE TABLE bank_accounts (
     color CHAR(7) CHECK (color ~ '^#[0-9A-Fa-f]{6}$'),
     initial_amount NUMERIC(11, 2) DEFAULT 0,
     user_id BIGINT NOT NULL REFERENCES users(id),
-        status INTEGER NOT NULL DEFAULT 0 CHECK (status IN (0, 1)), -- 0 - active, 1 - inactive
+    status INTEGER NOT NULL DEFAULT 0 CHECK (status IN (0, 1)), -- 0 - active, 1 - inactive
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -103,17 +103,17 @@ INSERT INTO category_budgets (name, amount, category_id, user_id)
 VALUES ('Meta Supermercado', 500, currval(pg_get_serial_sequence('categories', 'id')), currval(pg_get_serial_sequence('users', 'id')));
 
 -- Inserir conta bancária inicial
-WITH current_user AS (
-  SELECT currval(pg_get_serial_sequence('users', 'id')) AS user_id
-)
 INSERT INTO bank_accounts (name, color, initial_amount, user_id)
-SELECT name, color, initial_amount, user_id
-FROM current_user, (VALUES
-  ('NuBank', '#A020F0', 1000),
-  ('Inter', '#E66B19', 1500),
-  ('Caixa', '#1D33AD', 520.43),
-  ('Santander', '#DE1D1D', 0.49)
-) AS accounts(name, color, initial_amount);
+VALUES ('Inter', '#E66B19', 1500, currval(pg_get_serial_sequence('users', 'id')));
+
+INSERT INTO bank_accounts (name, color, initial_amount, user_id)
+VALUES ('NuBank', '#A020F0', 1000, currval(pg_get_serial_sequence('users', 'id')));
+
+INSERT INTO bank_accounts (name, color, initial_amount, user_id)
+VALUES ('Caixa', '#1D33AD', 520.23, currval(pg_get_serial_sequence('users', 'id')));
+
+INSERT INTO bank_accounts (name, color, initial_amount, user_id)
+VALUES ('Santander', '#DE1D1D', 0.49, currval(pg_get_serial_sequence('users', 'id')));
 
 -- Inserir cartão de crédito inicial
 INSERT INTO credit_cards (name, color, closing_day, paying_day, user_id)
