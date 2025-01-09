@@ -5,14 +5,16 @@ import java.math.BigDecimal;
 public class BankAccountDTO {
 
     private Long id;
+    private Long userId;
     private String name;
     private String color;
     private BigDecimal initialAmount;
     private Integer status;
 
     // Construtor
-    public BankAccountDTO(Long id, String name, String color, BigDecimal initialAmount, Integer status) {
+    public BankAccountDTO(Long id, Long userId, String name, String color, BigDecimal initialAmount, Integer status) {
         this.id = id;
+        this.userId = userId;
         this.name = name;
         this.color = color;
         this.initialAmount = initialAmount;
@@ -26,6 +28,14 @@ public class BankAccountDTO {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public String getName() {

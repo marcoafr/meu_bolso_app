@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import br.com.app.Constants;
+
 @Entity
 @Table(name = "bank_accounts")
 public class BankAccount {
@@ -25,8 +27,9 @@ public class BankAccount {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
-    private Integer status = 0; // Default: 0 (active)
+    @Enumerated(EnumType.ORDINAL)
+    @Column(nullable = false) // default: Constants.Status.ACTIVE
+    private Constants.Status status;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -37,7 +40,9 @@ public class BankAccount {
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        if (this.status == null) {
+            this.status = Constants.Status.ACTIVE;
+        }
     }
 
     @PreUpdate
@@ -85,11 +90,11 @@ public class BankAccount {
         this.user = user;
     }
 
-    public Integer getStatus() {
+    public Constants.Status getStatus() {
         return status;
     }
 
-    public void setStatus(Integer status) {
+    public void setStatus(Constants.Status status) {
         this.status = status;
     }
 

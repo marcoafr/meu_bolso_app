@@ -1,23 +1,19 @@
 package br.com.app.dto;
 
-public class CreditCardDTO {
+public class CategoryDTO {
 
     private Long id;
     private Long userId;
     private String name;
-    private String color;
-    private Integer closingDay;
-    private Integer payingDay;
+    private Integer type;
     private Integer status;
 
     // Construtor
-    public CreditCardDTO(Long id, Long userId, String name, String color, Integer closingDay, Integer payingDay, Integer status) {
+    public CategoryDTO(Long id, Long userId, String name, Integer type, Integer status) {
         this.id = id;
         this.userId = userId;
         this.name = name;
-        this.color = color;
-        this.closingDay = closingDay;
-        this.payingDay = payingDay;
+        this.type = type;
         this.status = status;
     }
 
@@ -29,7 +25,7 @@ public class CreditCardDTO {
     public void setId(Long id) {
         this.id = id;
     }
-    
+
     public Long getUserId() {
         return userId;
     }
@@ -46,28 +42,12 @@ public class CreditCardDTO {
         this.name = name;
     }
 
-    public String getColor() {
-        return color;
+    public Integer getType() {
+        return type;
     }
 
-    public void setColor(String color) {
-        this.color = color;
-    }
-
-    public Integer getClosingDay() {
-        return closingDay;
-    }
-
-    public void setClosingDay(Integer closingDay) {
-        this.closingDay = closingDay;
-    }
-
-    public Integer getPayingDay() {
-        return payingDay;
-    }
-
-    public void setPayingDay(Integer payingDay) {
-        this.payingDay = payingDay;
+    public void setType(Integer type) {
+        this.type = type;
     }
 
     public Integer getStatus() {

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Typography, Container, Box, List, ListItem, ListItemText, CircularProgress, Alert, Modal, Button, TextField, IconButton } from '@mui/material';
+import { Typography, Container, Box, List, ListItem, ListItemText, CircularProgress, Alert, Modal, Button, TextField, IconButton, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { useAuth } from '../authContext'; 
 import { bankAccountService } from '../api/bankAccountService';
 import { formatCurrency } from '../util/Util';
 import { creditCardService } from '../api/creditCardService';
-import { Add as AddIcon, Edit as EditIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { ChromePicker } from 'react-color';
 
 const BanksAndCards = () => {
@@ -28,11 +28,55 @@ const BanksAndCards = () => {
   });
 
   // Estados para formulários
-  const [newBank, setNewBank] = useState({ name: '', initialAmount: '', color: '#000000' });
-  const [newCard, setNewCard] = useState({ name: '', closingDay: '', payingDay: '', color: '#000000' });
+  const [newBank, setNewBank] = useState({ id: null, name: '', initialAmount: 0, color: '#000000' });
+  const [newCard, setNewCard] = useState({ id: null, name: '', closingDay: 1, payingDay: 10, color: '#000000' });
   const [editingItem, setEditingItem] = useState<any>(null); // Armazena o item sendo editado
+
+  // Estados para inativação
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [itemType, setItemType] = useState(""); // Para distinguir entre account e card
+
+  // Função para abrir o modal de exclusão e definir o item selecionado
+  const openModalDeleteConfirmation = (item, type) => {
+    setSelectedItem(item);
+    setItemType(type);
+    setOpenDeleteModal(true);
+  };
   
-  useEffect(() => {
+  // Função para fechar o modal
+  const closeDeleteModal = () => {
+    setOpenDeleteModal(false);
+    setSelectedItem(null);
+    setItemType("");
+  };
+
+  // Função para excluir ou inativar o item
+  const handleDeleteConfirmation = async () => {
+    if (selectedItem) {
+      const updatedItem = { ...selectedItem, status: 1 }; // Define o status como 1 (inactive)
+
+      try {
+        if (itemType === "account") {
+          // Atualiza a conta
+          await bankAccountService.editBankAccount(updatedItem);
+        } else if (itemType === "card") {
+          // Aqui você chamaria o serviço para editar o cartão, similar ao editBankAccount
+          await creditCardService.editCreditCard(updatedItem); // Ajuste conforme necessário
+        }
+        // Fechar o modal após a ação
+        search();
+        closeDeleteModal();
+        // Realize outras ações, como atualizar o estado ou mostrar sucesso
+      } catch (error) {
+        console.error("Erro ao atualizar o item:", error);
+        // Aqui você pode adicionar uma mensagem de erro ou outras ações
+      }
+    }
+  };
+
+  const search = () => {
+    // Busca bancos e cartões de crédito do usuário
     if (!user || !user.id) return; // Se o user não estiver disponível, não faz a requisição
 
     // Carregamento dos bancos
@@ -60,20 +104,23 @@ const BanksAndCards = () => {
         setErrorCards('Erro ao carregar cartões de crédito');
         setLoadingCards(false);
       });
+  }
+  
+  useEffect(() => {
+    search()
   }, [user]);
 
   const handleChangeComplete = (updatedColor) => {
     setColor(updatedColor);
-    console.log('Nova cor selecionada:', updatedColor.hex);
   };
 
   const openModalForBank = (bank: any = null) => {
     setEditingItem(bank);
     if (bank) {
       setColor(bank.color)
-      setNewBank({ name: bank.name, initialAmount: bank.initialAmount, color: bank.color });
+      setNewBank({ id: bank.id, name: bank.name, initialAmount: bank.initialAmount, color: bank.color });
     } else {
-      setNewBank({ name: '', initialAmount: '', color: '#000000' });
+      setNewBank({ id: null, name: '', initialAmount: 0, color: '#000000' });
     }
     setOpenBankModal(true);
   };
@@ -82,9 +129,9 @@ const BanksAndCards = () => {
     setEditingItem(card);
     if (card) {
       setColor(card.color);
-      setNewCard({ name: card.name, closingDay: card.closingDay, payingDay: card.payingDay, color: card.color });
+      setNewCard({ id: card.id, name: card.name, closingDay: card.closingDay, payingDay: card.payingDay, color: card.color });
     } else {
-      setNewCard({ name: '', closingDay: '', payingDay: '', color: '#000000' });
+      setNewCard({ id: null, name: '', closingDay: 1, payingDay: 10, color: '#000000' });
     }
     setOpenCardModal(true);
   };
@@ -92,10 +139,28 @@ const BanksAndCards = () => {
   const handleBankSubmit = () => {
     if (editingItem) {
       // Atualizar banco existente
-      console.log('Editando banco:', newBank);
+      const editingBank = {...newBank, color: color?.hex || color.hex || newBank.color} 
+      bankAccountService
+        .editBankAccount(editingBank)
+        .then((data) => {
+          search();
+        })
+        .catch(() => {
+          setErrorBanks('Erro ao editar conta bancária');
+          setLoadingBanks(false);
+        });
     } else {
       // Adicionar novo banco
-      console.log('Adicionando banco:', newBank);
+      const creatingBank = {name: newBank.name, initialAmount: newBank.initialAmount, color: color.hex} 
+      bankAccountService
+        .addBankAccount({...creatingBank, userId: user?.id})
+        .then((data) => {
+          search();
+        })
+        .catch(() => {
+          setErrorBanks('Erro ao adicionar conta bancária');
+          setLoadingBanks(false);
+        });    
     }
     setOpenBankModal(false);
     setEditingItem(null);
@@ -104,10 +169,28 @@ const BanksAndCards = () => {
   const handleCardSubmit = () => {
     if (editingItem) {
       // Atualizar cartão existente
-      console.log('Editando cartão:', newCard);
+      const editingCard = {...newCard, color: color?.hex || color || newCard.color}
+      creditCardService
+        .editCreditCard(editingCard)
+        .then((data) => {
+          search();
+        })
+        .catch(() => {
+          setErrorCards('Erro ao editar cartão de crédito');
+          setLoadingBanks(false);
+        });
     } else {
       // Adicionar novo cartão
-      console.log('Adicionando cartão:', newCard);
+      const creatingCard = {name: newCard.name, closingDay: newCard.closingDay, payingDay: newCard.payingDay, color: color.hex}
+      creditCardService
+        .addCreditCard({...creatingCard, userId: user?.id})
+        .then((data) => {
+          search();
+        })
+        .catch(() => {
+          setErrorCards('Erro ao adicionar cartão de crédito');
+          setLoadingBanks(false);
+        });  
     }
     setOpenCardModal(false);
     setEditingItem(null);
@@ -170,9 +253,19 @@ const BanksAndCards = () => {
                       <EditIcon />
                     </IconButton>
                   </Box>
+                  <Box sx={{ 
+                    backgroundColor: '#ffffff', 
+                    borderRadius: '50%', 
+                    padding: '5px', 
+                    marginLeft: '5px' 
+                  }}>
+                    <IconButton color="primary" onClick={() => openModalDeleteConfirmation(account, "account")}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
                 </Box>
                 <ListItemText
-                  primary={`Valor Inicial: ${formatCurrency(account.initialAmount)}`}
+                  primary={`Saldo Inicial: ${formatCurrency(account.initialAmount)}`}
                   sx={{
                     fontWeight: 'bold',
                     backgroundColor: '#ffffff',
@@ -197,10 +290,16 @@ const BanksAndCards = () => {
               margin="normal"
             />
             <TextField
-              label="Saldo Inicial"
+              label="Saldo Inicial (R$)"
               fullWidth
+              type='number'
               value={newBank.initialAmount}
-              onChange={(e) => setNewBank({ ...newBank, initialAmount: e.target.value })}
+              onChange={(e) => {
+                const value = e.target.value;
+                // Limita a 2 casas decimais
+                const formattedValue = parseFloat(value).toFixed(2);
+                setNewBank({ ...newBank, initialAmount: Number(formattedValue) });
+              }}
               margin="normal"
             />
             <ChromePicker
@@ -272,6 +371,16 @@ const BanksAndCards = () => {
                       <EditIcon />
                     </IconButton>
                   </Box>
+                  <Box sx={{ 
+                    backgroundColor: '#ffffff', 
+                    borderRadius: '50%', 
+                    padding: '5px', 
+                    marginLeft: '5px' 
+                  }}>
+                    <IconButton color="primary" onClick={() => openModalDeleteConfirmation(card, "card")}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
                 </Box>
                 <ListItemText
                   primary={`Dia de fechamento: ${card.closingDay} | Dia de pagamento: ${card.payingDay}`}
@@ -304,7 +413,12 @@ const BanksAndCards = () => {
               fullWidth
               type="number"
               value={newCard.closingDay}
-              onChange={(e) => setNewCard({ ...newCard, closingDay: e.target.value })}
+              onChange={(e) => {
+                const value = parseInt(e.target.value, 10);
+                if (value >= 1 && value <= 31) {
+                  setNewCard({ ...newCard, closingDay: value });
+                }
+              }}
               margin="normal"
             />
             <TextField
@@ -312,7 +426,12 @@ const BanksAndCards = () => {
               fullWidth
               type="number"
               value={newCard.payingDay}
-              onChange={(e) => setNewCard({ ...newCard, payingDay: e.target.value })}
+              onChange={(e) => {
+                const value = parseInt(e.target.value, 10);
+                if (value >= 1 && value <= 31) {
+                  setNewCard({ ...newCard, payingDay: value });
+                }
+              }}
               margin="normal"
             />
             <ChromePicker
@@ -327,6 +446,19 @@ const BanksAndCards = () => {
           </Box>
         </Modal>
       </Box>
+      
+      {/* Modal de Confirmação */}
+      <Dialog open={openDeleteModal} onClose={closeDeleteModal}>
+        <DialogTitle>Confirmar Exclusão</DialogTitle>
+        <DialogContent>
+          <p>Você tem certeza que deseja desativar este {itemType === "account" ? "conta" : "cartão"}?</p>
+          <p>Nome: {selectedItem != null ? selectedItem?.name : "N/I"}?</p>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDeleteModal} color="primary">Cancelar</Button>
+          <Button onClick={handleDeleteConfirmation} color="secondary">Confirmar</Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

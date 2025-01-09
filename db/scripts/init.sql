@@ -96,6 +96,9 @@ VALUES ('Marco', 'marcoafr@live.com', '21232f297a57a5a743894a0e4a801fc3', 'e3274
 
 -- Inserir categoria inicial vinculada ao último ID de usuário gerado
 INSERT INTO categories (name, type, user_id)
+VALUES ('Salário', 0, currval(pg_get_serial_sequence('users', 'id')));
+
+INSERT INTO categories (name, type, user_id)
 VALUES ('Supermercado', 1, currval(pg_get_serial_sequence('users', 'id')));
 
 -- Inserir orçamento de categoria inicial vinculado à categoria criada

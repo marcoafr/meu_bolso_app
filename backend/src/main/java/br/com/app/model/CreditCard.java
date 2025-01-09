@@ -3,6 +3,8 @@ package br.com.app.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import br.com.app.Constants;
+
 @Entity
 @Table(name = "credit_cards")
 public class CreditCard {
@@ -27,8 +29,9 @@ public class CreditCard {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
-    private Integer status = 0; // Default: 0 (active)
+    @Enumerated(EnumType.ORDINAL)
+    @Column(nullable = false) // default: Constants.Status.ACTIVE
+    private Constants.Status status;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -39,7 +42,9 @@ public class CreditCard {
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        if (this.status == null) {
+            this.status = Constants.Status.ACTIVE;
+        }
     }
 
     @PreUpdate
@@ -95,11 +100,11 @@ public class CreditCard {
         this.user = user;
     }
 
-    public Integer getStatus() {
+    public Constants.Status getStatus() {
         return status;
     }
 
-    public void setStatus(Integer status) {
+    public void setStatus(Constants.Status status) {
         this.status = status;
     }
 
