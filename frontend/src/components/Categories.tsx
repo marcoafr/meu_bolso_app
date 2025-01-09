@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Typography, Container, Box, List, ListItem, ListItemText, CircularProgress, Alert, Modal, Button, TextField, IconButton, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { useAuth } from '../authContext'; 
-import { bankAccountService } from '../api/bankAccountService';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { categoryService } from '../api/categoryService';
 
@@ -42,7 +41,7 @@ const Categories = () => {
       const updatedItem = { ...selectedItem, status: 1 }; // Define o status como 1 (inactive)
 
       try {
-        await bankAccountService.editBankAccount(updatedItem);
+        await categoryService.editCategory(updatedItem);
         // Fechar o modal após a ação
         search();
         closeDeleteModal();

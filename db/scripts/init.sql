@@ -25,7 +25,6 @@ CREATE TABLE categories (
 -- Criar a tabela category_budgets
 CREATE TABLE category_budgets (
     id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
     amount NUMERIC(11, 2) NOT NULL,
     status INTEGER NOT NULL DEFAULT 0 CHECK (status IN (0, 1)), -- 0 - active, 1 - inactive
     category_id BIGINT NOT NULL REFERENCES categories(id),
@@ -102,8 +101,8 @@ INSERT INTO categories (name, type, user_id)
 VALUES ('Supermercado', 1, currval(pg_get_serial_sequence('users', 'id')));
 
 -- Inserir orçamento de categoria inicial vinculado à categoria criada
-INSERT INTO category_budgets (name, amount, category_id, user_id)
-VALUES ('Meta Supermercado', 500, currval(pg_get_serial_sequence('categories', 'id')), currval(pg_get_serial_sequence('users', 'id')));
+INSERT INTO category_budgets (amount, category_id, user_id)
+VALUES (500, currval(pg_get_serial_sequence('categories', 'id')), currval(pg_get_serial_sequence('users', 'id')));
 
 -- Inserir conta bancária inicial
 INSERT INTO bank_accounts (name, color, initial_amount, user_id)

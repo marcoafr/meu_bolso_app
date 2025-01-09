@@ -2,6 +2,7 @@ package br.com.app.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import br.com.app.Constants;
 import java.math.BigDecimal;
 
 @Entity
@@ -12,17 +13,15 @@ public class CategoryBudget {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 255)
-    private String name;
-
     @Column(nullable = false, precision = 11, scale = 2)
     private BigDecimal amount;
 
-    @Column(nullable = false)
-    private Integer status = 0;  // Default to active (0)
+    @Enumerated(EnumType.ORDINAL)
+    @Column(nullable = false) // default: Constants.Status.ACTIVE
+    private Constants.Status status;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false, unique = true)
     private Category category;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -38,7 +37,9 @@ public class CategoryBudget {
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        if (this.status == null) {
+            this.status = Constants.Status.ACTIVE;
+        }
     }
 
     @PreUpdate
@@ -56,12 +57,12 @@ public class CategoryBudget {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public Constants.Status getStatus() {
+        return status;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setStatus(Constants.Status status) {
+        this.status = status;
     }
 
     public BigDecimal getAmount() {
@@ -70,14 +71,6 @@ public class CategoryBudget {
 
     public void setAmount(BigDecimal amount) {
         this.amount = amount;
-    }
-
-    public Integer getStatus() {
-        return status;
-    }
-
-    public void setStatus(Integer status) {
-        this.status = status;
     }
 
     public Category getCategory() {
