@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Typography,
   Container,
@@ -17,8 +17,11 @@ import CategoryDirective from '../directives/CategoryDirective';
 import BankDirective from '../directives/BankDirective';
 import { formatCurrency } from '../util/Util';
 import CardDirective from '../directives/CardDirective';
+import { useAuth } from '../authContext';
 
 const RegisterTransaction = () => {
+    const { user } = useAuth(); // Pegando o user do contexto de autenticação
+  
   const [type, setType] = useState<'despesa' | 'receita'>('despesa');
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [description, setDescription] = useState<string>('');
@@ -33,13 +36,6 @@ const RegisterTransaction = () => {
   const [installments, setInstallments] = useState<number>(1);
   const [installmentValue, setInstallmentValue] = useState<number>(0);
 
-  const handleInstallmentsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value, 10);
-    if (!isNaN(value)) {
-      setInstallments(value);
-    }
-  };
-
   useEffect(() => {
     if (installments > 0 && totalAmount >= 0) {
       const calculatedInstallmentValue = totalAmount / installments;
@@ -47,22 +43,38 @@ const RegisterTransaction = () => {
     }
   }, [totalAmount, installments]);
 
+  const handleInstallmentsChange = (event) => {
+    setInstallments(Number(event.target.value));
+  };
+
   const handleSubmit = () => {
     // Lógica para enviar a transação ao backend
-    console.log({
+    const filter = {
       type,
       date,
       description,
+      category,
       totalAmount,
       paymentType,
-      recurrenceInterval,
-      recurrenceQuantity,
-      category,
-      bank,
+
+      // payment method: bank / card
       paymentMethod,
+      bank,
+      card,
+
+      // installments
       installments,
       installmentValue,
-    });
+
+      // recurrence
+      recurrenceInterval,
+      recurrenceQuantity,
+
+      // userId
+      userId: user?.id
+
+    }
+    console.log(filter);
   };
 
   return (
@@ -168,36 +180,50 @@ const RegisterTransaction = () => {
             />
           </FormControl>
         )}
-        {paymentMethod === 'cartao' && (
-          <>
-            <FormControl fullWidth margin="normal">
-              <CardDirective
-                value={card}
-                onChange={(newCard) => {
-                  setCard(Number(newCard));
-                }}
-                multiple={false}
+        {
+          paymentMethod === 'cartao' && (
+            <>
+              <FormControl fullWidth margin="normal">
+                <CardDirective
+                  value={card}
+                  onChange={(newCard) => {
+                    setCard(Number(newCard));
+                  }}
+                  multiple={false}
+                />
+              </FormControl>
+            </>
+          )
+        }
+        {
+          paymentType === "installments" && (
+            <>
+              <FormControl fullWidth margin="normal">
+
+                <InputLabel id="installments-label">Número de Parcelas</InputLabel>
+                <Select
+                  labelId="installments-label"
+                  value={installments}
+                  onChange={handleInstallmentsChange}
+                  label="Número de Parcelas"
+                >
+                  {Array.from({ length: 18 }, (_, index) => (
+                    <MenuItem key={index + 1} value={index + 1}>
+                      {`${index + 1}x`}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <TextField
+                label="Valor da Parcela"
+                value={formatCurrency(installmentValue)}
+                fullWidth
+                margin="normal"
+                disabled={true}
               />
-            </FormControl>
-            <TextField
-              label="Número de Parcelas"
-              type="number"
-              value={installments}
-              onChange={handleInstallmentsChange}
-              fullWidth
-              margin="normal"
-              inputProps={{ min: 1, max: 18 }}
-              disabled={paymentType === "recurring"}
-            />
-            <TextField
-              label="Valor da Parcela"
-              value={formatCurrency(installmentValue)}
-              fullWidth
-              margin="normal"
-              disabled={true}
-            />
-          </>
-        )}
+            </>
+          )
+        }
 
         {paymentType === "recurring" && (
           <>
