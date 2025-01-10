@@ -10,36 +10,28 @@ import {
   FormControl,
   Button,
   FormControlLabel,
-  Checkbox,
-  InputAdornment,
+  RadioGroup,
+  Radio,
 } from "@mui/material";
+import CategoryDirective from '../directives/CategoryDirective';
+import BankDirective from '../directives/BankDirective';
+import { formatCurrency } from '../util/Util';
+import CardDirective from '../directives/CardDirective';
 
 const RegisterTransaction = () => {
   const [type, setType] = useState<'despesa' | 'receita'>('despesa');
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [description, setDescription] = useState<string>('');
   const [totalAmount, setTotalAmount] = useState<number>(0);
-  const [isRecurring, setIsRecurring] = useState<boolean>(false);
+  const [paymentType, setPaymentType] = useState('unique'); // Valor inicial pode ser qualquer um
   const [recurrenceInterval, setRecurrenceInterval] = useState<string>('mensal');
   const [recurrenceQuantity, setRecurrenceQuantity] = useState<number>(2);
-  const [category, setCategory] = useState<string>('');
-  const [bank, setBank] = useState<string>('');
+  const [category, setCategory] = useState<number>(0);
+  const [bank, setBank] = useState<number>(0); // Tipar o estado como number | string
+  const [card, setCard] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<'banco' | 'cartao'>('banco');
   const [installments, setInstallments] = useState<number>(1);
   const [installmentValue, setInstallmentValue] = useState<number>(0);
-
-  // Listas de dados de exemplo para bancos e categorias
-  const banks = ['Banco A', 'Banco B', 'Banco C'];
-  const categories = ['Categoria 1', 'Categoria 2'];
-
-  const handleTotalAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-
-    // Garantir que o valor seja um número com no máximo 2 casas decimais
-    if (/^\d+(\.\d{0,2})?$/.test(value)) {
-      setTotalAmount(parseFloat(value));
-    }
-  };
 
   const handleInstallmentsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
@@ -62,7 +54,7 @@ const RegisterTransaction = () => {
       date,
       description,
       totalAmount,
-      isRecurring,
+      paymentType,
       recurrenceInterval,
       recurrenceQuantity,
       category,
@@ -105,29 +97,109 @@ const RegisterTransaction = () => {
           margin="normal"
         />
 
+        <FormControl fullWidth margin="normal">
+          <CategoryDirective
+            multiple={false} // Apenas uma categoria pode ser selecionada
+            value={category} // Categoria atual do orçamento
+            onChange={(newCategory) => {
+              setCategory(Number(newCategory));
+            }}
+            includeTypeOnName={true} // Incluir "Despesa" ou "Receita" no nome
+            showOnlyReceiptOrExpense={type === 'despesa' ? 'expense' : 'receipt'}
+          />
+        </FormControl>
+
         <TextField
-            label="Valor Total"
-            value={totalAmount.toFixed(2)}
-            onChange={handleTotalAmountChange}
-            fullWidth
-            margin="normal"
-            InputProps={{
-            startAdornment: <InputAdornment position="start">R$</InputAdornment>,
-            }}
-            inputProps={{
-            step: "0.01",  // Define o passo para 2 casas decimais
-            min: "0",      // Garante que o número não seja negativo
-            }}
+          label="Valor Total (R$)"
+          fullWidth
+          type='number'
+          value={totalAmount}
+          onChange={(e) => {
+            const value = e.target.value;
+            // Limita a 2 casas decimais
+            const formattedValue = parseFloat(parseFloat(value).toFixed(2));
+            setTotalAmount(formattedValue);
+          }}
+          margin="normal"
         />
 
-        <FormControlLabel
-          control={
-            <Checkbox checked={isRecurring} onChange={(e) => setIsRecurring(e.target.checked)} />
-          }
-          label="Transação Recorrente?"
-        />
+        <FormControl fullWidth margin="normal">
+          <InputLabel>Forma de Pagamento</InputLabel>
+          <Select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as 'banco' | 'cartao')}>
+            <MenuItem value="banco">Banco</MenuItem>
+            {type === 'despesa' && <MenuItem value="cartao">Cartão</MenuItem>}
+          </Select>
+        </FormControl>
 
-        {isRecurring && (
+        <h4>Froma de Pagamento</h4>
+
+        <FormControl component="fieldset">
+          <RadioGroup
+            row
+            value={paymentType} // Valor que vai controlar qual opção está selecionada
+            onChange={(e) => setPaymentType(e.target.value)} // Atualiza o estado conforme a seleção
+          >
+            <FormControlLabel
+              value="unique"
+              control={<Radio />}
+              label="Único"
+            />
+            <FormControlLabel
+              value="installments"
+              control={<Radio />}
+              label="Parcelado"
+            />
+            <FormControlLabel
+              value="recurring"
+              control={<Radio />}
+              label="Recorrente"
+            />
+          </RadioGroup>
+        </FormControl>
+
+        {paymentMethod === 'banco' && (
+          <FormControl fullWidth margin="normal">
+            <BankDirective
+              value={bank}
+              onChange={(newBankValue) => {
+                setBank(Number(newBankValue));
+              }}
+              multiple={false} // Apenas uma seleção
+            />
+          </FormControl>
+        )}
+        {paymentMethod === 'cartao' && (
+          <>
+            <FormControl fullWidth margin="normal">
+              <CardDirective
+                value={card}
+                onChange={(newCard) => {
+                  setCard(Number(newCard));
+                }}
+                multiple={false}
+              />
+            </FormControl>
+            <TextField
+              label="Número de Parcelas"
+              type="number"
+              value={installments}
+              onChange={handleInstallmentsChange}
+              fullWidth
+              margin="normal"
+              inputProps={{ min: 1, max: 18 }}
+              disabled={paymentType === "recurring"}
+            />
+            <TextField
+              label="Valor da Parcela"
+              value={formatCurrency(installmentValue)}
+              fullWidth
+              margin="normal"
+              disabled={true}
+            />
+          </>
+        )}
+
+        {paymentType === "recurring" && (
           <>
             <FormControl fullWidth margin="normal">
               <InputLabel>Intervalo de Recorrência</InputLabel>
@@ -151,84 +223,7 @@ const RegisterTransaction = () => {
             />
           </>
         )}
-
-        {type === 'receita' && (
-          <>
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Banco</InputLabel>
-              <Select value={bank} onChange={(e) => setBank(e.target.value)}>
-                {banks.map((bankOption, index) => (
-                  <MenuItem key={index} value={bankOption}>
-                    {bankOption}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Categoria</InputLabel>
-              <Select value={category} onChange={(e) => setCategory(e.target.value)}>
-                {categories.map((categoryOption, index) => (
-                  <MenuItem key={index} value={categoryOption}>
-                    {categoryOption}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </>
-        )}
-
-        {type === 'despesa' && (
-          <>
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Forma de Pagamento</InputLabel>
-              <Select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as 'banco' | 'cartao')}>
-                <MenuItem value="banco">Banco</MenuItem>
-                <MenuItem value="cartao">Cartão</MenuItem>
-              </Select>
-            </FormControl>
-
-            {paymentMethod === 'banco' && (
-              <FormControl fullWidth margin="normal">
-                <InputLabel>Banco</InputLabel>
-                <Select value={bank} onChange={(e) => setBank(e.target.value)}>
-                  {banks.map((bankOption, index) => (
-                    <MenuItem key={index} value={bankOption}>
-                      {bankOption}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
-
-            {paymentMethod === 'cartao' && (
-              <>
-                <TextField
-                  label="Número de Parcelas"
-                  type="number"
-                  value={installments}
-                  onChange={handleInstallmentsChange}
-                  fullWidth
-                  margin="normal"
-                  inputProps={{ min: 1, max: 18 }}
-                  disabled={isRecurring}
-                />
-
-                <TextField
-                    label="Valor da Parcela"
-                    value={`R$ ${installmentValue.toFixed(2)}`}
-                    fullWidth
-                    margin="normal"
-                    InputProps={{
-                    startAdornment: <InputAdornment position="start">R$</InputAdornment>,
-                    readOnly: true,
-                    }}
-                />
-              </>
-            )}
-          </>
-        )}
-
+    
         <Button variant="contained" color="primary" onClick={handleSubmit} fullWidth>
           {type === 'despesa' ? 'Lançar Despesa' : 'Lançar Receita'}
         </Button>
