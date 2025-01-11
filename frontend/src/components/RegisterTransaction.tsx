@@ -19,9 +19,11 @@ import { formatCurrency } from '../util/Util';
 import CardDirective from '../directives/CardDirective';
 import { useAuth } from '../authContext';
 import { createTransactionService } from '../api/createTransactionService';
+import { useSnackbar } from '../directives/snackbar/SnackbarContext';
 
 const RegisterTransaction = () => {
-    const { user } = useAuth(); // Pegando o user do contexto de autenticação
+  const { user } = useAuth(); // Pegando o user do contexto de autenticação
+  const { showSnackbar } = useSnackbar(); // Usando o hook do Snackbar
   
   const [type, setType] = useState<'despesa' | 'receita'>('despesa');
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);

@@ -5,9 +5,11 @@ import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/ico
 import { categoryBudgetService } from '../api/categoryBudgetService';
 import { formatCurrency } from '../util/Util';
 import CategoryDirective from '../directives/CategoryDirective';
+import { useSnackbar } from '../directives/snackbar/SnackbarContext';
 
 const Budgets = () => {
   const { user } = useAuth(); // Pegando o user do contexto de autenticação
+  const { showSnackbar } = useSnackbar(); // Usando o hook do Snackbar
 
   // Estados para orçamentos
   const [budgets, setBudgets] = useState<any[]>([]);
@@ -46,11 +48,13 @@ const Budgets = () => {
         await categoryBudgetService.editCategoryBudget(updatedItem);
         // Fechar o modal após a ação
         search();
+        showSnackbar("LEdição bem-sucedida!", "success"); 
         closeDeleteModal();
         // Realize outras ações, como atualizar o estado ou mostrar sucesso
       } catch (error) {
         console.error("Erro ao atualizar o item:", error);
         // Aqui você pode adicionar uma mensagem de erro ou outras ações
+        showSnackbar("Edição mal-sucedida!", "error"); 
       }
     }
   };
@@ -107,9 +111,11 @@ const Budgets = () => {
         .addCategoryBudget({...finalCreatingBudget, userId: user?.id})
         .then((data) => {
           search();
+          showSnackbar("Criação bem-sucedida!", "success"); 
         })
         .catch(() => {
           setErrorBudgets('Erro ao adicionar categoria');
+          showSnackbar("Criação mal-sucedida!", "error"); 
           setLoadingBudgets(false);
         });    
     }
@@ -201,7 +207,7 @@ const Budgets = () => {
         )}
         {/* Modal de adicionar/editar orçamento */}
         <Modal open={openBudgetModal} onClose={() => setOpenBudgetModal(false)}>
-          <Box p={3} bgcolor="white" borderRadius={2} mx="auto" my={5} width={400}>
+          <Box p={3} bgcolor="white" borderRadius={2} mx="auto" my={5} width={400} maxWidth="80%">
             <Typography variant="h6">{editingBudget ? 'Editar Orçamento' : 'Adicionar Orçamento'}</Typography>
             <CategoryDirective
               multiple={false} // Apenas uma categoria pode ser selecionada

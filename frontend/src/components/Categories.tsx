@@ -3,9 +3,11 @@ import { Typography, Container, Box, List, ListItem, ListItemText, CircularProgr
 import { useAuth } from '../authContext'; 
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { categoryService } from '../api/categoryService';
+import { useSnackbar } from '../directives/snackbar/SnackbarContext';
 
 const Categories = () => {
   const { user } = useAuth(); // Pegando o user do contexto de autenticação
+  const { showSnackbar } = useSnackbar(); // Usando o hook do Snackbar
 
   // Estados para categorias
   const [categories, setCategories] = useState<any[]>([]);
@@ -45,10 +47,12 @@ const Categories = () => {
         // Fechar o modal após a ação
         search();
         closeDeleteModal();
+        showSnackbar("Deleção bem-sucedida!", "success"); 
         // Realize outras ações, como atualizar o estado ou mostrar sucesso
       } catch (error) {
         console.error("Erro ao atualizar o item:", error);
         // Aqui você pode adicionar uma mensagem de erro ou outras ações
+        showSnackbar("Deleção mal-sucedida!", "error"); 
       }
     }
   };
@@ -103,9 +107,11 @@ const Categories = () => {
         .editCategory(finalEditingCategory)
         .then((data) => {
           search();
+          showSnackbar("Edição bem-sucedida!", "success"); 
         })
         .catch(() => {
           setErrorCategories('Erro ao editar categoria');
+          showSnackbar("Edição mal-sucedida!", "error"); 
           setLoadingCategories(false);
         });
     } else {
@@ -115,9 +121,11 @@ const Categories = () => {
         .addCategory({...finalCreatingCategory, userId: user?.id})
         .then((data) => {
           search();
+          showSnackbar("Criação bem-sucedida!", "success"); 
         })
         .catch(() => {
           setErrorCategories('Erro ao adicionar categoria');
+          showSnackbar("Edição mal-sucedida!", "error"); 
           setLoadingCategories(false);
         });    
     }
@@ -199,7 +207,7 @@ const Categories = () => {
         )}
         {/* Modal de adicionar/editar categoria */}
         <Modal open={openCategoryModal} onClose={() => setOpenCategoryModal(false)}>
-          <Box p={3} bgcolor="white" borderRadius={2} mx="auto" my={5} width={400}>
+          <Box p={3} bgcolor="white" borderRadius={2} mx="auto" my={5} width={400} maxWidth="80%">
             <Typography variant="h6">{editingCategory ? 'Editar Categoria' : 'Adicionar Categoria'}</Typography>
             <TextField
               label="Nome da Categoria"

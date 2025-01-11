@@ -47,6 +47,7 @@ public class CategoryBudgetController {
         CategoryBudget categoryBudget = new CategoryBudget();
         categoryBudget.setUser(new User());
         categoryBudget.getUser().setId(categoryBudgetDTO.getUserId());
+        categoryBudget.setCategory(new Category());
         categoryBudget.getCategory().setId(categoryBudgetDTO.getCategoryId());
         categoryBudget.setAmount(categoryBudgetDTO.getAmount());
         categoryBudget.setStatus(Constants.Status.ACTIVE);
@@ -56,11 +57,11 @@ public class CategoryBudgetController {
         return new CategoryBudgetDTO(
             savedCategoryBudget.getId(),
             null,
-            savedCategoryBudget.getCategory().getId(),
+            null,
             savedCategoryBudget.getAmount(),
             savedCategoryBudget.getStatus().getValue(),
-            savedCategoryBudget.getCategory().getName(),
-            savedCategoryBudget.getCategory().getType().getValue());
+            null,
+            null);
     }
 
     // Endpoint para editar um cartão de crédito existente
@@ -81,10 +82,10 @@ public class CategoryBudgetController {
         return new CategoryBudgetDTO(
             updatedCategoryBudget.getId(), 
             null,
-            updatedCategoryBudget.getCategory().getId(),
+            null,
             updatedCategoryBudget.getAmount(),
             updatedCategoryBudget.getStatus().getValue(),
-            updatedCategoryBudget.getCategory().getName(),
-            updatedCategoryBudget.getCategory().getType().getValue());
+            null,
+            null);
     }
 }

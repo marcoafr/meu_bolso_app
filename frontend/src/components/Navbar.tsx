@@ -12,6 +12,10 @@ const Navbar = () => {
   const { user, logout } = useAuth(); // Usando o logout do AuthContext
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const handleLogoClick = () => {
+    navigate('/home'); // Redireciona para /home quando a imagem for clicada
+  };
+
   // Realiza o logout usando o método do AuthContext
   const handleLogout = () => {
     logout(); // Chama o método logout do AuthContext
@@ -46,23 +50,25 @@ const Navbar = () => {
             component="img"
             src={logonotext}
             alt="Logo"
+            onClick={handleLogoClick} 
             sx={{
               maxWidth: { xs: '8%', sm: '4%' },
               maxHeight: '40%',
               objectFit: 'contain',
+              cursor: 'pointer',
             }}
           />
           <Typography variant="h6" sx={{ flexGrow: 1, ml: 2 }}>
             Olá, {user?.name || 'Usuário'}
           </Typography>
           {/* Menu para telas maiores */}
-          <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 2 }}>
+          <Box sx={{ display: { xs: 'none', lg: 'flex' }, gap: 2 }}>
             {navigationLinks.map((link) => (
-              <Button key={link.path} color="inherit" onClick={() => handleNavigation(link.path)}>
+              <Button key={link.path} color="inherit" onClick={() => handleNavigation(link.path)} sx={{ flexGrow: 1 }}>
                 {link.label}
               </Button>
             ))}
-            <Button color="inherit" onClick={handleLogout}>
+            <Button color="inherit" onClick={handleLogout} sx={{ ml: 'auto' }}>
               Sair
             </Button>
           </Box>
@@ -71,7 +77,7 @@ const Navbar = () => {
           <IconButton
             color="inherit"
             edge="end"
-            sx={{ display: { sm: 'none' } }} // Mostra apenas no mobile
+            sx={{ display: { lg: 'none' } }} // Mostra apenas no mobile
             onClick={toggleDrawer}
           >
             <MenuIcon />

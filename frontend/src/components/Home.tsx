@@ -17,44 +17,37 @@ const Home = () => {
     }
   }, [sessionStorage]);
 
+  const menuItems = [
+    { label: "Dashboard", path: "/dashboard" },
+    { label: "Registrar Transação", path: "/registerTransaction" },
+    { label: "Transações", path: "/transactions" },
+    { label: "Categorias", path: "/categories" },
+    { label: "Orçamentos", path: "/budgets" },
+    { label: "Bancos e Cartões", path: "/banksAndCards" },
+  ];
+
+  const handleNavigation = (path) => {
+    navigate(path); // Realiza a navegação para o path passado
+  };
+
   return (
     <Container>
       {isLoggedIn ? (
         <Box>
           <Typography variant="h4" align="center" gutterBottom>
-            Você está logado!
+            Bem-vindo!
           </Typography>
           <Grid container spacing={2} justifyContent="center">
-            <Grid item xs={12} sm={4} md={2}>
-              <Paper sx={{ padding: 2, textAlign: "center" }}>
-                <Typography variant="h6">Gráficos / Resumo</Typography>
+          {menuItems.map((item) => (
+            <Grid item xs={12} key={item.path}>
+              <Paper 
+                sx={{ padding: 2, textAlign: "center", cursor: 'pointer' }} 
+                onClick={() => handleNavigation(item.path)} // Navega ao clicar no Paper
+              >
+                <Typography variant="h6">{item.label}</Typography>
               </Paper>
             </Grid>
-            <Grid item xs={12} sm={4} md={2}>
-              <Paper sx={{ padding: 2, textAlign: "center" }}>
-                <Typography variant="h6">Lançar Despesa / Receita</Typography>
-              </Paper>
-            </Grid>
-            <Grid item xs={12} sm={4} md={2}>
-              <Paper sx={{ padding: 2, textAlign: "center" }}>
-                <Typography variant="h6">Lançamentos</Typography>
-              </Paper>
-            </Grid>
-            <Grid item xs={12} sm={4} md={2}>
-              <Paper sx={{ padding: 2, textAlign: "center" }}>
-                <Typography variant="h6">Categorias</Typography>
-              </Paper>
-            </Grid>
-            <Grid item xs={12} sm={4} md={2}>
-              <Paper sx={{ padding: 2, textAlign: "center" }}>
-                <Typography variant="h6">Orçamentos</Typography>
-              </Paper>
-            </Grid>
-            <Grid item xs={12} sm={4} md={2}>
-              <Paper sx={{ padding: 2, textAlign: "center" }}>
-                <Typography variant="h6">Bancos e Cartões</Typography>
-              </Paper>
-            </Grid>
+          ))}
           </Grid>
         </Box>
       ) : (

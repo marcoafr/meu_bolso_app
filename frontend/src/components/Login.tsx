@@ -1,21 +1,27 @@
 // src/components/Login.tsx
 
 import { useState } from "react";
-import { TextField, Button, Box, Typography, Alert } from "@mui/material";
+import { TextField, Button, Box, Typography, Alert, CircularProgress } from "@mui/material";
 import { login as apiLogin } from "../api/authService";  // Função de login da API
 import { useAuth } from "../authContext";  // Função de login do AuthContext
 import { useNavigate } from "react-router-dom";
 import logo from '../images/logo.png';
+import { useSnackbar } from "../directives/snackbar/SnackbarContext";
 
 const Login = () => {
   const [loginInput, setLogin] = useState("");
   const [passwordInput, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false); // Estado para controlar o loading
   const navigate = useNavigate();
   const { login } = useAuth(); // Login do AuthContext
+  const { showSnackbar } = useSnackbar(); // Usando o hook do Snackbar
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true); // Ativa o loading antes de fazer a requisição
+    setErrorMessage(null); // Reseta a mensagem de erro
+
     try {
       // 1. Realiza o login na API
       const response = await apiLogin(loginInput, passwordInput);
@@ -31,16 +37,20 @@ const Login = () => {
 
         // 4. Redireciona o usuário para a página principal
         navigate("/home");
+        // 5. Apresentar snackbar bem sucedido
+        showSnackbar("Login bem-sucedido!", "success"); 
       } else {
         setErrorMessage("Login ou senha incorretos");
       }
     } catch (error: any) {
-      // 5. Caso haja erro, exibe a mensagem correspondente
+      // 6. Caso haja erro, exibe a mensagem correspondente
       if (error.response?.status === 401) {
         setErrorMessage("Login ou senha incorretos");
       } else {
         setErrorMessage("Ocorreu um erro. Tente novamente.");
       }
+    } finally {
+      setIsLoading(false); // Desativa o loading após a requisição
     }
   };
 
@@ -52,10 +62,11 @@ const Login = () => {
             alignItems: 'center',
             justifyContent: 'center',
             width: {
-                xs: '100%',    // Para dispositivos móveis, ocupa 100% da largura
+                xs: '80%',    // Para dispositivos móveis, ocupa 100% da largura
                 sm: '30%',     // Para telas maiores, ocupa 30% da largura
             },
             height: 'auto',
+            minHeight: '350px',
             padding: 3,
             borderRadius: 2,
             boxShadow: 3,
@@ -120,8 +131,13 @@ const Login = () => {
             marginTop: 2,
             padding: '10px',
           }}
+          disabled={isLoading} // Desabilita o botão enquanto o carregamento está ativo
         >
-          Entrar
+          {isLoading ? (
+            <CircularProgress size={24} sx={{ color: 'white' }} /> // Exibe o indicador de loading
+          ) : (
+            'Entrar'
+          )}
         </Button>
       </form>
     </Box>

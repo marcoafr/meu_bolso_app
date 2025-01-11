@@ -6,9 +6,11 @@ import { formatCurrency } from '../util/Util';
 import { creditCardService } from '../api/creditCardService';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { ChromePicker } from 'react-color';
+import { useSnackbar } from '../directives/snackbar/SnackbarContext';
 
 const BanksAndCards = () => {
   const { user } = useAuth(); // Pegando o user do contexto de autenticação
+  const { showSnackbar } = useSnackbar(); // Usando o hook do Snackbar
 
   // Estados para bancos
   const [bankAccounts, setBankAccounts] = useState<any[]>([]);
@@ -67,10 +69,12 @@ const BanksAndCards = () => {
         // Fechar o modal após a ação
         search();
         closeDeleteModal();
+        showSnackbar("Deleção bem-sucedida!", "success"); 
         // Realize outras ações, como atualizar o estado ou mostrar sucesso
       } catch (error) {
-        console.error("Erro ao atualizar o item:", error);
+        console.error("Erro ao deletar o item:", error);
         // Aqui você pode adicionar uma mensagem de erro ou outras ações
+        showSnackbar("Deleção mal-sucedida!", "error"); 
       }
     }
   };
@@ -144,9 +148,11 @@ const BanksAndCards = () => {
         .editBankAccount(editingBank)
         .then((data) => {
           search();
+          showSnackbar("Edição bem-sucedida!", "success"); 
         })
         .catch(() => {
           setErrorBanks('Erro ao editar conta bancária');
+          showSnackbar("Edição bem-sucedida!", "error"); 
           setLoadingBanks(false);
         });
     } else {
@@ -156,9 +162,11 @@ const BanksAndCards = () => {
         .addBankAccount({...creatingBank, userId: user?.id})
         .then((data) => {
           search();
+          showSnackbar("Criação bem-sucedida!", "success"); 
         })
         .catch(() => {
           setErrorBanks('Erro ao adicionar conta bancária');
+          showSnackbar("Criação mal-sucedida!", "error"); 
           setLoadingBanks(false);
         });    
     }
@@ -174,9 +182,11 @@ const BanksAndCards = () => {
         .editCreditCard(editingCard)
         .then((data) => {
           search();
+          showSnackbar("Edição bem-sucedida!", "success"); 
         })
         .catch(() => {
           setErrorCards('Erro ao editar cartão de crédito');
+          showSnackbar("Edição mal-sucedida!", "error"); 
           setLoadingBanks(false);
         });
     } else {
@@ -186,9 +196,11 @@ const BanksAndCards = () => {
         .addCreditCard({...creatingCard, userId: user?.id})
         .then((data) => {
           search();
+          showSnackbar("Criação bem-sucedida!", "success"); 
         })
         .catch(() => {
           setErrorCards('Erro ao adicionar cartão de crédito');
+          showSnackbar("Criação mal-sucedida!", "error"); 
           setLoadingBanks(false);
         });  
     }
@@ -280,7 +292,7 @@ const BanksAndCards = () => {
         )}
         {/* Modal de adicionar/editar banco */}
         <Modal open={openBankModal} onClose={() => setOpenBankModal(false)}>
-          <Box p={3} bgcolor="white" borderRadius={2} mx="auto" my={5} width={400}>
+          <Box p={3} bgcolor="white" borderRadius={2} mx="auto" my={5} width={400} maxWidth="80%">
             <Typography variant="h6">{editingItem ? 'Editar Banco' : 'Adicionar Banco'}</Typography>
             <TextField
               label="Nome do Banco"
