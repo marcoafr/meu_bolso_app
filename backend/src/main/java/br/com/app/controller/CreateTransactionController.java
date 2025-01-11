@@ -101,6 +101,9 @@ public class CreateTransactionController {
                         receivable.getTotalAmount(),
                         receivable.getCompetenceDate(),
                         receivable.getStatus().getValue(),
+                        (receivable.getBankAccount() != null && receivable.getBankAccount().getId() != null && receivable.getBankAccount().getId() > 0) 
+                            ? receivable.getBankAccount().getId() 
+                            : null,
                         (receivable.getBankAccount() != null && receivable.getBankAccount().getName() != null && !receivable.getBankAccount().getName().isEmpty()) 
                             ? receivable.getBankAccount().getName() 
                             : null
@@ -117,6 +120,9 @@ public class CreateTransactionController {
                 transaction.getDescription(),
                 receivableDTOs,
                 null,
+                (transaction.getCreditCard() != null && transaction.getCreditCard().getId() != null && transaction.getCreditCard().getId() > 0) 
+                    ? transaction.getCreditCard().getId() 
+                    : null,
                 (transaction.getCreditCard() != null && transaction.getCreditCard().getName() != null && !transaction.getCreditCard().getName().isEmpty()) 
                     ? transaction.getCreditCard().getName() 
                     : null

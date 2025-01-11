@@ -324,15 +324,21 @@ const RegisterTransaction = () => {
               </Select>
             </FormControl>
 
-            <TextField
-              label="Quantidade de Recorrência"
-              type="number"
-              value={recurrenceQuantity}
-              onChange={(e) => setRecurrenceQuantity(Math.min(36, Math.max(2, parseInt(e.target.value))))}
-              fullWidth
-              margin="normal"
-              inputProps={{ min: 2, max: 36 }}
-            />
+            <FormControl fullWidth margin="normal">
+              <InputLabel id="recurrence-quantity-label">Quantidade de Recorrência</InputLabel>
+              <Select
+                labelId="recurrence-quantity-label"
+                value={recurrenceQuantity}
+                onChange={(e) => setRecurrenceQuantity(Number(e.target.value))}
+                label="Quantidade de Recorrência"
+              >
+                {Array.from({ length: 35 }, (_, index) => (
+                  <MenuItem key={index + 2} value={index + 2}>
+                    {`${index + 2}`}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </>
         )}
     

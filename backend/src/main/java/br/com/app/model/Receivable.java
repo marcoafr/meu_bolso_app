@@ -3,6 +3,10 @@ package br.com.app.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.Type;
+
+import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
+
 import br.com.app.Constants;
 
 import java.time.LocalDate;
@@ -50,7 +54,8 @@ public class Receivable {
     @Column(name = "payment_date")
     private LocalDate paymentDate;
 
-    @Column(name = "metadata", columnDefinition = "jsonb")
+    @Type(JsonBinaryType.class)
+    @Column(columnDefinition = "jsonb")
     private String metadata;
 
     @Column(name = "created_at", nullable = false, updatable = false)

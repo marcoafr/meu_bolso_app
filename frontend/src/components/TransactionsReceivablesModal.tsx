@@ -12,7 +12,7 @@ import {
   Button,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { formatCurrency } from '../util/Util';
+import { formatCurrency, formatLocalDate } from '../util/Util';
 import { transactionService } from '../api/transactionService';
 import { useSnackbar } from '../directives/snackbar/SnackbarContext';
 import { useAuth } from '../authContext';
@@ -27,7 +27,13 @@ const TransactionsReceivablesModal = ({ openCategoryModal, setOpenCategoryModal,
   
   const handleSave = () => {
     // Função de salvar que você vai implementar
-    transactions.forEach(t => t.userId = user?.id)
+    transactions.forEach(t => {
+        t.issueDate = formatLocalDate(t.issueDate)
+        t.userId = user?.id
+        t.receivables.forEach(r => {
+            r.competenceDate = formatLocalDate(r.competenceDate)
+        })
+    })
     transactionService
         .batchInsert(transactions)
         .then((data) => {

@@ -86,7 +86,7 @@ CREATE TABLE receivables (
     user_id BIGINT NOT NULL REFERENCES users(id),
     bank_account_id BIGINT REFERENCES bank_accounts(id),
     payment_date DATE, 
-    metadata JSONB, 
+    metadata JSONB DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
 );

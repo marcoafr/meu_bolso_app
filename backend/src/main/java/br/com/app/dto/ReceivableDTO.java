@@ -8,13 +8,15 @@ public class ReceivableDTO {
     private BigDecimal amount;
     private LocalDate competenceDate;
     private Integer status;
+    private Long bankId;
     private String bankName;
 
-    public ReceivableDTO(Long id, BigDecimal amount, LocalDate competenceDate, Integer status, String bankName) {
+    public ReceivableDTO(Long id, BigDecimal amount, LocalDate competenceDate, Integer status, Long bankId ,String bankName) {
         this.id = id;
         this.amount = amount;
         this.competenceDate = competenceDate;
         this.status = status;
+        this.bankId = bankId;
         this.bankName = bankName;
     }
 
@@ -50,6 +52,14 @@ public class ReceivableDTO {
 
     public void setStatus(Integer status) {
         this.status = status;
+    }
+
+    public Long getBankId() {
+        return bankId;
+    }
+
+    public void setBankId(Long bankId) {
+        this.bankId = bankId;
     }
     
     public String getBankName() {

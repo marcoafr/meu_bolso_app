@@ -5,7 +5,9 @@ import br.com.app.Constants;
 import br.com.app.dto.ReceivableDTO;
 import br.com.app.model.Transaction;
 import br.com.app.model.User;
+import br.com.app.model.BankAccount;
 import br.com.app.model.Category;
+import br.com.app.model.CreditCard;
 import br.com.app.model.Receivable;
 import br.com.app.repository.TransactionRepository;
 import br.com.app.repository.ReceivableRepository;
@@ -43,6 +45,11 @@ public class TransactionController {
             transaction.setStatus(Constants.TransactionStatus.fromValue(dto.getStatus()));
             transaction.setTotalAmount(dto.getTotalAmount());
 
+            if (dto.getCreditCardId() != null && dto.getCategoryId() > 0) {
+                transaction.setCreditCard(new CreditCard());
+                transaction.getCreditCard().setId(dto.getCreditCardId());
+            }
+
             // Salva a transação no banco
             transaction = transactionRepository.save(transaction);
 
@@ -55,6 +62,12 @@ public class TransactionController {
                 receivable.setCompetenceDate(receivableDTO.getCompetenceDate());
                 receivable.setStatus(Constants.TransactionStatus.fromValue(receivableDTO.getStatus()));
                 receivable.setTransaction(transaction);
+                receivable.setMetadata("{}");
+
+                if (receivableDTO.getBankId() != null && receivableDTO.getBankId() > 0) {
+                    receivable.setBankAccount(new BankAccount());
+                    receivable.getBankAccount().setId(receivableDTO.getBankId());
+                }
 
                 // Salva o recebível
                 receivableRepository.save(receivable);

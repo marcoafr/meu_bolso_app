@@ -14,9 +14,10 @@ public class TransactionDTO {
     private String description;
     private List<ReceivableDTO> receivables;
     private Long userId;
+    private Long creditCardId;
     private String creditCardName;
 
-    public TransactionDTO(Long id, BigDecimal totalAmount, LocalDate issueDate, Integer status, Long categoryId, String categoryName, String description, List<ReceivableDTO> receivables, Long userId, String creditCardName) {
+    public TransactionDTO(Long id, BigDecimal totalAmount, LocalDate issueDate, Integer status, Long categoryId, String categoryName, String description, List<ReceivableDTO> receivables, Long userId, Long creditCardId, String creditCardName) {
         this.id = id;
         this.totalAmount = totalAmount;
         this.issueDate = issueDate;
@@ -26,6 +27,7 @@ public class TransactionDTO {
         this.description = description;
         this.receivables = receivables;
         this.userId = userId;
+        this.creditCardId = creditCardId;
         this.creditCardName = creditCardName;
     }
 
@@ -100,6 +102,14 @@ public class TransactionDTO {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+    
+    public Long getCreditCardId() {
+        return creditCardId;
+    }
+
+    public void setCreditCardId(Long creditCardId) {
+        this.creditCardId = creditCardId;
     }
     
     public String getCreditCardName() {
