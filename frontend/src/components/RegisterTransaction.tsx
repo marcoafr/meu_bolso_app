@@ -18,6 +18,7 @@ import BankDirective from '../directives/BankDirective';
 import { formatCurrency } from '../util/Util';
 import CardDirective from '../directives/CardDirective';
 import { useAuth } from '../authContext';
+import { createTransactionService } from '../api/createTransactionService';
 
 const RegisterTransaction = () => {
     const { user } = useAuth(); // Pegando o user do contexto de autenticação
@@ -74,7 +75,15 @@ const RegisterTransaction = () => {
       userId: user?.id
 
     }
-    console.log(filter);
+
+    createTransactionService
+      .mountTransaction(filter)
+      .then((data) => {
+        console.log(data)
+      })
+      .catch(() => {
+        
+      });
   };
 
   return (

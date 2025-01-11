@@ -1,12 +1,13 @@
 package br.com.app.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 public class CreateTransactionDTO {
-    private Integer bank;
-    private Integer card;
-    private Integer category;
-    private String date;
+    private Long bank;
+    private Long card;
+    private Long category;
+    private LocalDate date;
     private String description;
     private BigDecimal installmentValue;
     private Integer installments;
@@ -19,35 +20,35 @@ public class CreateTransactionDTO {
     private Long userId;
 
     // Getters e Setters
-    public Integer getBank() {
+    public Long getBank() {
         return bank;
     }
 
-    public void setBank(Integer bank) {
+    public void setBank(Long bank) {
         this.bank = bank;
     }
 
-    public Integer getCard() {
+    public Long getCard() {
         return card;
     }
 
-    public void setCard(Integer card) {
+    public void setCard(Long card) {
         this.card = card;
     }
 
-    public Integer getCategory() {
+    public Long getCategory() {
         return category;
     }
 
-    public void setCategory(Integer category) {
+    public void setCategory(Long category) {
         this.category = category;
     }
 
-    public String getDate() {
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setDate(String date) {
+    public void setDate(LocalDate date) {
         this.date = date;
     }
 

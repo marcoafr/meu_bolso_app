@@ -2,6 +2,12 @@ package br.com.app.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+import br.com.app.Constants;
+
 import java.math.BigDecimal;
 
 @Entity
@@ -16,10 +22,11 @@ public class Transaction {
     private BigDecimal totalAmount;
 
     @Column(name = "issue_date", nullable = false)
-    private LocalDateTime issueDate;
+    private LocalDate issueDate;
 
-    @Column(nullable = false)
-    private Integer status;
+    @Enumerated(EnumType.ORDINAL)
+    @Column(nullable = false) // default: Constants.Status.PENDING
+    private Constants.TransactionStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
@@ -38,6 +45,9 @@ public class Transaction {
 
     @Column
     private String description;
+
+    @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Receivable> receivables = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -74,19 +84,19 @@ public class Transaction {
         this.totalAmount = totalAmount;
     }
 
-    public LocalDateTime getIssueDate() {
+    public LocalDate getIssueDate() {
         return issueDate;
     }
 
-    public void setIssueDate(LocalDateTime issueDate) {
+    public void setIssueDate(LocalDate issueDate) {
         this.issueDate = issueDate;
     }
 
-    public Integer getStatus() {
+    public Constants.TransactionStatus getStatus() {
         return status;
     }
 
-    public void setStatus(Integer status) {
+    public void setStatus(Constants.TransactionStatus status) {
         this.status = status;
     }
 
@@ -144,5 +154,25 @@ public class Transaction {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+
+    public List<Receivable> getReceivables() {
+        return receivables;
+    }
+
+    public void setReceivables(List<Receivable> receivables) {
+        this.receivables = receivables;
+    }
+
+    // Adicionar ou remover receivables
+    public void addReceivable(Receivable receivable) {
+        receivables.add(receivable);
+        receivable.setTransaction(this);
+    }
+    
+    public void removeReceivable(Receivable receivable) {
+        receivables.remove(receivable);
+        receivable.setTransaction(null);
     }
 }

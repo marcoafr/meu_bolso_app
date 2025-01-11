@@ -80,10 +80,12 @@ CREATE TABLE receivables (
     discount_amount NUMERIC(11, 2) DEFAULT 0, 
     tax_amount NUMERIC(11, 2) DEFAULT 0, 
     paid_amount NUMERIC(11, 2) DEFAULT 0, 
+    competence_date DATE NOT NULL, 
     status INTEGER NOT NULL CHECK (status IN (0, 1, 3, 4)), -- 0 - Pending, 1 - Paid, 3 - Canceled, 4 - Deleted;
     transaction_id BIGINT NOT NULL REFERENCES transactions(id), 
     user_id BIGINT NOT NULL REFERENCES users(id),
     bank_account_id BIGINT REFERENCES bank_accounts(id),
+    payment_date DATE, 
     metadata JSONB, 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 

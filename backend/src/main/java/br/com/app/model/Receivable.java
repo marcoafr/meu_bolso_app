@@ -2,6 +2,10 @@ package br.com.app.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+
+import br.com.app.Constants;
+
+import java.time.LocalDate;
 import java.math.BigDecimal;
 
 @Entity
@@ -24,8 +28,12 @@ public class Receivable {
     @Column(name = "paid_amount", nullable = false, precision = 11, scale = 2)
     private BigDecimal paidAmount = new BigDecimal("0.00");
 
-    @Column(nullable = false)
-    private Integer status;
+    @Column(name = "competence_date", nullable = false)
+    private LocalDate competenceDate;
+
+    @Enumerated(EnumType.ORDINAL)
+    @Column(nullable = false) // default: Constants.Status.PENDING
+    private Constants.TransactionStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "transaction_id", nullable = false)
@@ -38,6 +46,9 @@ public class Receivable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bank_account_id")
     private BankAccount bankAccount;
+
+    @Column(name = "payment_date")
+    private LocalDate paymentDate;
 
     @Column(name = "metadata", columnDefinition = "jsonb")
     private String metadata;
@@ -101,11 +112,11 @@ public class Receivable {
         this.paidAmount = paidAmount;
     }
 
-    public Integer getStatus() {
+    public Constants.TransactionStatus getStatus() {
         return status;
     }
 
-    public void setStatus(Integer status) {
+    public void setStatus(Constants.TransactionStatus status) {
         this.status = status;
     }
 
@@ -155,5 +166,21 @@ public class Receivable {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    public LocalDate getCompetenceDate() {
+        return competenceDate;
+    }
+
+    public void setCompetenceDate(LocalDate competenceDate) {
+        this.competenceDate = competenceDate;
+    }
+    
+    public LocalDate getPaymentDate() {
+        return paymentDate;
+    }
+
+    public void setPaymentDate(LocalDate paymentDate) {
+        this.paymentDate = paymentDate;
     }
 }

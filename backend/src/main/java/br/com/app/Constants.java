@@ -73,4 +73,31 @@ public class Constants {
             throw new IllegalArgumentException("Invalid CategoryType value: " + value);
         }
     }
+
+    public enum TransactionStatus {
+        PENDING(0),
+        PAID(1),
+        PARTIALLY_PAID(2),
+        CANCELED(3),
+        DELETED(4);
+
+        private final int value;
+
+        TransactionStatus(int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return value;
+        }
+
+        public static TransactionStatus fromValue(int value) {
+            for (TransactionStatus status : TransactionStatus.values()) {
+                if (status.value == value) {
+                    return status;
+                }
+            }
+            throw new IllegalArgumentException("Invalid TransactionStatus value: " + value);
+        }
+    }
 }
