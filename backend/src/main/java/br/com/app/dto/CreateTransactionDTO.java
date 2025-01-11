@@ -5,8 +5,11 @@ import java.time.LocalDate;
 
 public class CreateTransactionDTO {
     private Long bank;
+    private String bankName;
     private Long card;
+    private String cardName;
     private Long category;
+    private String categoryName;
     private LocalDate date;
     private String description;
     private BigDecimal installmentValue;
@@ -28,6 +31,14 @@ public class CreateTransactionDTO {
         this.bank = bank;
     }
 
+    public String getBankName() {
+        return bankName;
+    }
+    
+    public void setBankName(String bankName) {
+        this.bankName = bankName;
+    }
+
     public Long getCard() {
         return card;
     }
@@ -36,12 +47,28 @@ public class CreateTransactionDTO {
         this.card = card;
     }
 
+    public String getCardName() {
+        return cardName;
+    }
+
+    public void setCardName(String cardName) {
+        this.cardName = cardName;
+    }
+
     public Long getCategory() {
         return category;
     }
 
     public void setCategory(Long category) {
         this.category = category;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
     }
 
     public LocalDate getDate() {

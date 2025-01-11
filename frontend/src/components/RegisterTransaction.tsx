@@ -20,6 +20,7 @@ import CardDirective from '../directives/CardDirective';
 import { useAuth } from '../authContext';
 import { createTransactionService } from '../api/createTransactionService';
 import { useSnackbar } from '../directives/snackbar/SnackbarContext';
+import TransactionsReceivablesModal from './TransactionsReceivablesModal';
 
 const RegisterTransaction = () => {
   const { user } = useAuth(); // Pegando o user do contexto de autenticação
@@ -29,15 +30,19 @@ const RegisterTransaction = () => {
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [description, setDescription] = useState<string>('');
   const [totalAmount, setTotalAmount] = useState<number>(0);
-  const [paymentType, setPaymentType] = useState('unique'); // Valor inicial pode ser qualquer um
-  const [recurrenceInterval, setRecurrenceInterval] = useState<string>('mensal');
+  const [paymentType, setPaymentType] = useState<'unique' | 'installments' | 'recurring'>('unique'); // Valor inicial pode ser qualquer um
+  const [recurrenceInterval, setRecurrenceInterval] = useState<'diario' | 'semanal' | 'quinzenal' | 'mensal' | 'anual' >('mensal');
   const [recurrenceQuantity, setRecurrenceQuantity] = useState<number>(2);
   const [category, setCategory] = useState<number>(0);
   const [bank, setBank] = useState<number>(0); // Tipar o estado como number | string
   const [card, setCard] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<'banco' | 'cartao'>('banco');
-  const [installments, setInstallments] = useState<number>(1);
+  const [installments, setInstallments] = useState<number>(2);
   const [installmentValue, setInstallmentValue] = useState<number>(0);
+
+  // Modal de Confirmação
+  const [creationTransactions, setCreationTransactions]= useState<any[]>([]);
+  const [openModal, setOpenModal] = useState(false);
 
   useEffect(() => {
     if (installments > 0 && totalAmount >= 0) {
@@ -50,42 +55,112 @@ const RegisterTransaction = () => {
     setInstallments(Number(event.target.value));
   };
 
-  const handleSubmit = () => {
-    // Lógica para enviar a transação ao backend
-    const filter = {
-      type,
-      date,
-      description,
-      category,
-      totalAmount,
-      paymentType,
-
-      // payment method: bank / card
-      paymentMethod,
-      bank,
-      card,
-
-      // installments
-      installments,
-      installmentValue,
-
-      // recurrence
-      recurrenceInterval,
-      recurrenceQuantity,
-
-      // userId
-      userId: user?.id
-
+  const validateFilters = () => {
+    if (type == null || (type != 'despesa' && 'receita')) {
+      showSnackbar("Tipo de transação é obrigatório (Despesa ou Receita)", "warning");
+      return false
+    }
+    if (date == null) {
+      showSnackbar("Data de emissão é obrigatória", "warning");
+      return false
+    }
+    if (description == null || description == '') {
+      showSnackbar("Descrição é obrigatória", "warning");
+      return false
+    }
+    if (category == null || category <= 0) {
+      showSnackbar("Categoria é obrigatória", "warning");
+      return false
+    }
+    if (totalAmount == null || totalAmount <= 0) {
+      showSnackbar("Valor Total (R$) é obrigatório", "warning");
+      return false
+    }
+    if (paymentMethod == null || (paymentMethod !== 'banco' && paymentMethod !== 'cartao')) {
+      showSnackbar("Forma de Pagamento é obrigatório (Banco ou Cartão)", "warning");
+      return false
     }
 
-    createTransactionService
-      .mountTransaction(filter)
-      .then((data) => {
-        console.log(data)
-      })
-      .catch(() => {
-        
-      });
+    if (paymentType == null || (paymentType !== 'unique' && paymentType !== 'installments' && paymentType !== 'recurring')) {
+      showSnackbar("Modalidade de Pagamento é obrigatório (Único, Parcelado ou Recorrente)", "warning");
+      return false
+    }
+
+    if (paymentMethod === 'banco' && (bank == null || bank <= 0)) {
+      showSnackbar("Conta Bancária é obrigatória para Forma de Pagamento: Banco", "warning");
+      return false
+    }
+    if (paymentMethod === 'cartao' && (card == null || card <= 0)) {
+      showSnackbar("Cartão de Crédito é obrigatório para Forma de Pagamento: Cartão", "warning");
+      return false
+    }
+
+    if (paymentType === 'installments') {
+      if (installments == null || installments <= 0) {
+        showSnackbar("Número de Parcelas é obrigatório para Modalidade de Pagamento: Parcelado", "warning");
+        return false
+      }
+    }
+
+    if (paymentType === 'recurring') {
+      if (recurrenceInterval == null || (recurrenceInterval !== 'diario' && recurrenceInterval !== 'semanal' && recurrenceInterval !== 'quinzenal' && recurrenceInterval !== 'mensal' && recurrenceInterval !== 'anual')) {
+        showSnackbar("Intervalo de Recorrência é obrigatório para Modalidade de Pagamento: Recorrente", "warning");
+        return false
+      }
+      if (recurrenceInterval == null || recurrenceQuantity <= 0) {
+        showSnackbar("Quantidade de Recorrência é obrigatório para Modalidade de Pagamento: Recorrente", "warning");
+        return false
+      }
+    }
+
+    return true;
+  };
+
+  const handleSubmit = () => {
+    // Lógica para enviar a transação ao backend
+    if (validateFilters()) {
+      const filter = {
+        type,
+        date,
+        description,
+        category,
+        totalAmount,
+        paymentType,
+  
+        // payment method: bank / card
+        paymentMethod,
+        bank,
+        card,
+  
+        // installments
+        installments,
+        installmentValue,
+  
+        // recurrence
+        recurrenceInterval,
+        recurrenceQuantity,
+  
+        // userId
+        userId: user?.id
+  
+      }
+  
+      createTransactionService
+        .mountTransaction(filter)
+        .then((data) => {
+          if (data != null && data.length > 0) {
+            data.forEach(e => {
+              e.type = type
+
+            })
+          }
+          setCreationTransactions(data)
+          setOpenModal(true)
+        })
+        .catch(() => {
+          showSnackbar("Ocorreu algum erro ao montar transação.", "error");
+        });
+    }
   };
 
   return (
@@ -146,15 +221,7 @@ const RegisterTransaction = () => {
           margin="normal"
         />
 
-        <FormControl fullWidth margin="normal">
-          <InputLabel>Forma de Pagamento</InputLabel>
-          <Select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as 'banco' | 'cartao')}>
-            <MenuItem value="banco">Banco</MenuItem>
-            {type === 'despesa' && <MenuItem value="cartao">Cartão</MenuItem>}
-          </Select>
-        </FormControl>
-
-        <h4>Froma de Pagamento</h4>
+        <h4>Modalidade de Pagamento</h4>
 
         <FormControl component="fieldset">
           <RadioGroup
@@ -178,6 +245,14 @@ const RegisterTransaction = () => {
               label="Recorrente"
             />
           </RadioGroup>
+        </FormControl>
+
+        <FormControl fullWidth margin="normal">
+          <InputLabel>Forma de Pagamento</InputLabel>
+          <Select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as 'banco' | 'cartao')}>
+            <MenuItem value="banco">Banco</MenuItem>
+            {type === 'despesa' && <MenuItem value="cartao">Cartão</MenuItem>}
+          </Select>
         </FormControl>
 
         {paymentMethod === 'banco' && (
@@ -218,9 +293,9 @@ const RegisterTransaction = () => {
                   onChange={handleInstallmentsChange}
                   label="Número de Parcelas"
                 >
-                  {Array.from({ length: 18 }, (_, index) => (
-                    <MenuItem key={index + 1} value={index + 1}>
-                      {`${index + 1}x`}
+                  {Array.from({ length: 17 }, (_, index) => (
+                    <MenuItem key={index + 2} value={index + 2}>
+                      {`${index + 2}x`}
                     </MenuItem>
                   ))}
                 </Select>
@@ -241,10 +316,10 @@ const RegisterTransaction = () => {
             <FormControl fullWidth margin="normal">
               <InputLabel>Intervalo de Recorrência</InputLabel>
               <Select value={recurrenceInterval} onChange={(e) => setRecurrenceInterval(e.target.value)}>
-                <MenuItem value="mensal">Mensal</MenuItem>
-                <MenuItem value="quinzenal">Quinzenal</MenuItem>
-                <MenuItem value="semanal">Semanal</MenuItem>
                 <MenuItem value="diario">Diário</MenuItem>
+                <MenuItem value="semanal">Semanal</MenuItem>
+                <MenuItem value="quinzenal">Quinzenal</MenuItem>
+                <MenuItem value="mensal">Mensal</MenuItem>
                 <MenuItem value="anual">Anual</MenuItem>
               </Select>
             </FormControl>
@@ -265,6 +340,13 @@ const RegisterTransaction = () => {
           {type === 'despesa' ? 'Lançar Despesa' : 'Lançar Receita'}
         </Button>
       </Box>
+
+      <TransactionsReceivablesModal
+        openCategoryModal={openModal}
+        setOpenCategoryModal={setOpenModal}
+        transactions={creationTransactions}
+        title={"Confirmar Lançamento(s)"}
+      />
     </Container>
   );
 };

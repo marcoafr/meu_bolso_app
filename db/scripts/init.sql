@@ -63,7 +63,7 @@ CREATE TABLE transactions (
     id BIGSERIAL PRIMARY KEY, 
     total_amount NUMERIC(11, 2) NOT NULL, 
     issue_date DATE NOT NULL, 
-    status INTEGER NOT NULL CHECK (status IN (0, 1, 2, 3, 4)), -- 0 - Pending, 1 - Paid, 2 - Partially Paid, 3 - Canceled, 4 - Deleted;
+    status INTEGER DEFAULT 0 NOT NULL CHECK (status IN (0, 1, 2, 3, 4)), -- 0 - Pending, 1 - Paid, 2 - Partially Paid, 3 - Canceled, 4 - Deleted;
     category_id BIGINT NOT NULL REFERENCES categories(id), 
     credit_card_id BIGINT REFERENCES credit_cards(id), 
     user_id BIGINT NOT NULL REFERENCES users(id), 

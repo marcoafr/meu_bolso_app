@@ -1,5 +1,6 @@
 package br.com.app.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,9 +11,14 @@ import br.com.app.Constants;
 import br.com.app.dto.CreateTransactionDTO;
 import br.com.app.dto.ReceivableDTO;
 import br.com.app.dto.TransactionDTO;
+import br.com.app.model.BankAccount;
 import br.com.app.model.Category;
+import br.com.app.model.CreditCard;
 import br.com.app.model.Receivable;
 import br.com.app.model.Transaction;
+import br.com.app.service.BankAccountService;
+import br.com.app.service.CategoryService;
+import br.com.app.service.CreditCardService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -26,9 +32,47 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/create-transaction")
 public class CreateTransactionController {
 
+    private final CategoryService categoryService;
+    private final CreditCardService creditCardService;
+    private final BankAccountService bankAccountService;
+
+    @Autowired
+    public CreateTransactionController(CategoryService categoryService, CreditCardService creditCardService, BankAccountService bankAccountService) {
+        this.categoryService = categoryService;
+        this.creditCardService = creditCardService;
+        this.bankAccountService = bankAccountService;
+    }
+
     @PostMapping("/mount-transaction")
     public ResponseEntity<String> mountTransaction(@RequestBody CreateTransactionDTO transactionDTO) {
         List<Transaction> transactions = new ArrayList<>();
+
+        // Get Category Info
+        Category category = categoryService.getCategoryById(transactionDTO.getCategory());
+        if (category == null) {
+            return ResponseEntity.badRequest().body("Categoria não encontrada");
+        } else {
+            transactionDTO.setCategoryName(category.getName());
+        }
+
+        // Get Credit Card or Bank Info
+        if (transactionDTO.getPaymentMethod().equals("cartao")) {
+            // Get Credit Card Info
+            CreditCard creditCard = creditCardService.getCreditCardById(transactionDTO.getCard());
+            if (creditCard == null) {
+                return ResponseEntity.badRequest().body("Cartão não encontrado");
+            } else {
+                transactionDTO.setCardName(creditCard.getName());
+            }
+        } else if (transactionDTO.getPaymentMethod().equals("banco")) {
+            // Get Bank Info
+            BankAccount bankAccount = bankAccountService.getBankAccountById(transactionDTO.getBank());
+            if (bankAccount == null) {
+                return ResponseEntity.badRequest().body("Conta bancária não encontrada");
+            } else {
+                transactionDTO.setBankName(bankAccount.getName());
+            }
+        }
 
         if ("installments".equalsIgnoreCase(transactionDTO.getPaymentType())) {
             transactions.add(createInstallmentTransaction(transactionDTO));
@@ -56,7 +100,10 @@ public class CreateTransactionController {
                         receivable.getId(),
                         receivable.getTotalAmount(),
                         receivable.getCompetenceDate(),
-                        receivable.getStatus().getValue()
+                        receivable.getStatus().getValue(),
+                        (receivable.getBankAccount() != null && receivable.getBankAccount().getName() != null && !receivable.getBankAccount().getName().isEmpty()) 
+                            ? receivable.getBankAccount().getName() 
+                            : null
                 ))
                 .collect(Collectors.toList());
 
@@ -66,8 +113,13 @@ public class CreateTransactionController {
                 transaction.getIssueDate(),
                 transaction.getStatus().getValue(),
                 transaction.getCategory().getId(),
+                transaction.getCategory().getName(),
                 transaction.getDescription(),
-                receivableDTOs
+                receivableDTOs,
+                null,
+                (transaction.getCreditCard() != null && transaction.getCreditCard().getName() != null && !transaction.getCreditCard().getName().isEmpty()) 
+                    ? transaction.getCreditCard().getName() 
+                    : null
         );
     }
 
@@ -77,9 +129,16 @@ public class CreateTransactionController {
         transaction.setIssueDate(dto.getDate());
         transaction.setCategory(new Category());
         transaction.getCategory().setId(dto.getCategory());
+        transaction.getCategory().setName(dto.getCategoryName());
         transaction.setDescription(dto.getDescription());
         transaction.setCorrelationId(UUID.randomUUID().toString());
         transaction.setStatus(Constants.TransactionStatus.PENDING); // Status inicial padrão
+        
+        if (dto.getCard() != null && dto.getCard() > 0) {
+            transaction.setCreditCard(new CreditCard());
+            transaction.getCreditCard().setId(dto.getCard());
+            transaction.getCreditCard().setName(dto.getCardName());
+        }
 
         List<Receivable> receivables = new ArrayList<>();
         BigDecimal installmentValue = dto.getTotalAmount().divide(BigDecimal.valueOf(dto.getInstallments()), 2, RoundingMode.DOWN);
@@ -94,6 +153,12 @@ public class CreateTransactionController {
             receivable.setTransaction(transaction);
             receivable.setStatus(Constants.TransactionStatus.PENDING); // Status inicial padrão
 
+            if (dto.getBank() != null && dto.getBank() > 0) {
+                receivable.setBankAccount(new BankAccount());
+                receivable.getBankAccount().setId(dto.getBank());
+                receivable.getBankAccount().setName(dto.getBankName());
+            }
+
             receivables.add(receivable);
             competenceDate = advanceToNextMonth(competenceDate);
         }
@@ -105,6 +170,7 @@ public class CreateTransactionController {
     private List<Transaction> createRecurringTransactions(CreateTransactionDTO dto) {
         List<Transaction> transactions = new ArrayList<>();
         LocalDate issueDate = dto.getDate();
+        String correlationId = UUID.randomUUID().toString();
 
         for (int i = 0; i < dto.getRecurrenceQuantity(); i++) {
             Transaction transaction = new Transaction();
@@ -112,15 +178,28 @@ public class CreateTransactionController {
             transaction.setIssueDate(issueDate);
             transaction.setCategory(new Category());
             transaction.getCategory().setId(dto.getCategory());
+            transaction.getCategory().setName(dto.getCategoryName());
             transaction.setDescription(dto.getDescription());
-            transaction.setCorrelationId(UUID.randomUUID().toString());
+            transaction.setCorrelationId(correlationId);
             transaction.setStatus(Constants.TransactionStatus.PENDING); // Status inicial padrão
+
+            if (dto.getCard() != null && dto.getCard() > 0) {
+                transaction.setCreditCard(new CreditCard());
+                transaction.getCreditCard().setId(dto.getCard());
+                transaction.getCreditCard().setName(dto.getCardName());
+            }
 
             Receivable receivable = new Receivable();
             receivable.setTotalAmount(dto.getTotalAmount());
             receivable.setCompetenceDate(issueDate);
             receivable.setTransaction(transaction);
             receivable.setStatus(Constants.TransactionStatus.PENDING); // Status inicial padrão
+
+            if (dto.getBank() != null && dto.getBank() > 0) {
+                receivable.setBankAccount(new BankAccount());
+                receivable.getBankAccount().setId(dto.getBank());
+                receivable.getBankAccount().setName(dto.getBankName());
+            }
 
             transaction.setReceivables(List.of(receivable));
             transactions.add(transaction);
@@ -137,9 +216,16 @@ public class CreateTransactionController {
         transaction.setIssueDate(dto.getDate());
         transaction.setCategory(new Category());
         transaction.getCategory().setId(dto.getCategory());
+        transaction.getCategory().setName(dto.getCategoryName());
         transaction.setDescription(dto.getDescription());
         transaction.setCorrelationId(UUID.randomUUID().toString());
         transaction.setStatus(Constants.TransactionStatus.PENDING); // Status inicial padrão
+        
+        if (dto.getCard() != null && dto.getCard() > 0) {
+            transaction.setCreditCard(new CreditCard());
+            transaction.getCreditCard().setId(dto.getCard());
+            transaction.getCreditCard().setName(dto.getCardName());
+        }
 
         Receivable receivable = new Receivable();
         receivable.setTotalAmount(dto.getTotalAmount());
@@ -147,6 +233,12 @@ public class CreateTransactionController {
         receivable.setTransaction(transaction);
         receivable.setStatus(Constants.TransactionStatus.PENDING); // Status inicial padrão
 
+        if (dto.getBank() != null && dto.getBank() > 0) {
+            receivable.setBankAccount(new BankAccount());
+            receivable.getBankAccount().setId(dto.getBank());
+            receivable.getBankAccount().setName(dto.getBankName());
+        }
+        
         transaction.setReceivables(List.of(receivable));
         return transaction;
     }

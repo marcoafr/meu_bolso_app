@@ -8,12 +8,14 @@ public class ReceivableDTO {
     private BigDecimal amount;
     private LocalDate competenceDate;
     private Integer status;
+    private String bankName;
 
-    public ReceivableDTO(Long id, BigDecimal amount, LocalDate competenceDate, Integer status) {
+    public ReceivableDTO(Long id, BigDecimal amount, LocalDate competenceDate, Integer status, String bankName) {
         this.id = id;
         this.amount = amount;
         this.competenceDate = competenceDate;
         this.status = status;
+        this.bankName = bankName;
     }
 
     // Getters e Setters
@@ -48,5 +50,13 @@ public class ReceivableDTO {
 
     public void setStatus(Integer status) {
         this.status = status;
+    }
+    
+    public String getBankName() {
+        return bankName;
+    }
+
+    public void setBankName(String bankName) {
+        this.bankName = bankName;
     }
 }

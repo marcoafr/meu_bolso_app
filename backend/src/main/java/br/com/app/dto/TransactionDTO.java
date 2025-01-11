@@ -10,17 +10,23 @@ public class TransactionDTO {
     private LocalDate issueDate;
     private Integer status;
     private Long categoryId;
+    private String categoryName;
     private String description;
     private List<ReceivableDTO> receivables;
+    private Long userId;
+    private String creditCardName;
 
-    public TransactionDTO(Long id, BigDecimal totalAmount, LocalDate issueDate, Integer status, Long categoryId, String description, List<ReceivableDTO> receivables) {
+    public TransactionDTO(Long id, BigDecimal totalAmount, LocalDate issueDate, Integer status, Long categoryId, String categoryName, String description, List<ReceivableDTO> receivables, Long userId, String creditCardName) {
         this.id = id;
         this.totalAmount = totalAmount;
         this.issueDate = issueDate;
         this.status = status;
         this.categoryId = categoryId;
+        this.categoryName = categoryName;
         this.description = description;
         this.receivables = receivables;
+        this.userId = userId;
+        this.creditCardName = creditCardName;
     }
 
     // Getters e Setters
@@ -64,6 +70,14 @@ public class TransactionDTO {
         this.categoryId = categoryId;
     }
 
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
+    }
+
     public String getDescription() {
         return description;
     }
@@ -78,5 +92,21 @@ public class TransactionDTO {
 
     public void setReceivables(List<ReceivableDTO> receivables) {
         this.receivables = receivables;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+    
+    public String getCreditCardName() {
+        return creditCardName;
+    }
+
+    public void setCreditCardName(String creditCardName) {
+        this.creditCardName = creditCardName;
     }
 }
