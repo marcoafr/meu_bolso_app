@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 @Repository
-public interface ReceivableRepository extends JpaRepository<Receivable, Long> {
+public interface ReceivableRepository extends JpaRepository<Receivable, Long>, ReceivableRepositoryCustom {
 
     @Query("SELECT r FROM Receivable r " +
            "JOIN FETCH r.transaction t " +

@@ -106,7 +106,8 @@ public class CreateTransactionController {
                             : null,
                         (receivable.getBankAccount() != null && receivable.getBankAccount().getName() != null && !receivable.getBankAccount().getName().isEmpty()) 
                             ? receivable.getBankAccount().getName() 
-                            : null
+                            : null,
+                        null
                 ))
                 .collect(Collectors.toList());
 
@@ -125,7 +126,8 @@ public class CreateTransactionController {
                     : null,
                 (transaction.getCreditCard() != null && transaction.getCreditCard().getName() != null && !transaction.getCreditCard().getName().isEmpty()) 
                     ? transaction.getCreditCard().getName() 
-                    : null
+                    : null,
+                null
         );
     }
 

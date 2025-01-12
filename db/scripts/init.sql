@@ -128,5 +128,5 @@ INSERT INTO transactions (total_amount, issue_date, category_id, user_id, status
 VALUES (200, '2024-12-01', currval(pg_get_serial_sequence('categories', 'id')), currval(pg_get_serial_sequence('users', 'id')), 0);
 
 -- Inserir receivable único
-INSERT INTO receivables (total_amount, status, transaction_id, user_id)
-VALUES (200, 0, currval(pg_get_serial_sequence('transactions', 'id')), currval(pg_get_serial_sequence('users', 'id')));
+INSERT INTO receivables (total_amount, status, transaction_id, competence_date, user_id)
+VALUES (200, 0, currval(pg_get_serial_sequence('transactions', 'id')), '2024-12-01', currval(pg_get_serial_sequence('users', 'id')));

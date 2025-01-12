@@ -8,16 +8,25 @@ import CategoryDirective from "../directives/CategoryDirective";
 import CardDirective from "../directives/CardDirective";
 import BankDirective from "../directives/BankDirective";
 import PaymentStatusDirective from "../directives/PaymentStatusDirective";
+import { receivableService } from "../api/receivableService";
 
 const Transactions = () => {
-  const [filters, setFilters] = useState({
-    from: null as string | null,
-    to: null as string | null,
-    transactionType: null as number | null,
-    categories: [] as number[],  // Aceita múltiplos ou um único valor
-    bankAccounts: [] as number[],  // Aceita múltiplos ou um único valor
-    creditCards: [] as number[],  // Aceita múltiplos ou um único valor
-    status: [] as number[],  // Status agora é um array para permitir múltiplos
+  const [filters, setFilters] = useState(() => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1); // Subtrai 1 dia para obter o dia de ontem
+  
+    const formatDate = (date: Date) => date.toISOString().split('T')[0]; // Função para formatar a data
+  
+    return {
+      from: formatDate(yesterday), // Data de ontem
+      to: formatDate(today), // Data de hoje
+      transactionType: null as number | null,
+      categories: [] as number[],
+      bankAccounts: [] as number[],
+      creditCards: [] as number[],
+      status: [] as number[],
+    };
   });
 
   const handleFilterChange = (key: keyof typeof filters, value: any) => {
@@ -29,6 +38,17 @@ const Transactions = () => {
 
   const handleSearch = () => {
     console.log('Aplicar pesquisa com filtros:', filters);
+    receivableService
+      .getAnalyticalListReceivableByUserId(filters)
+      .then((data) => {
+        console.log(data);
+      })
+      .catch(() => {
+
+      })
+      .finally(() => {
+
+      });
     // Lógica de pesquisa será implementada aqui
   };
 
