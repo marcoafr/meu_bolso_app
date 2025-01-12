@@ -41,7 +41,12 @@ const Home = () => {
           {menuItems.map((item) => (
             <Grid item xs={12} key={item.path}>
               <Paper 
-                sx={{ padding: 2, textAlign: "center", cursor: 'pointer' }} 
+                sx={{
+                  padding: 2,
+                  textAlign: "center",
+                  cursor: 'pointer',
+                  backgroundColor: '#f5f5f5' // Cor de fundo cinza claro
+                }} 
                 onClick={() => handleNavigation(item.path)} // Navega ao clicar no Paper
               >
                 <Typography variant="h6">{item.label}</Typography>

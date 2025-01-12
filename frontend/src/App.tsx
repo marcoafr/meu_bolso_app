@@ -25,9 +25,9 @@ const App: React.FC = () => {
             <Route path="/home" element={<><Navbar/> <Home /></>} />
             <Route path="/dashboard" element={<><Navbar/> <Dashboard /></>} />
             <Route path="/registerTransaction" element={<><Navbar/> <RegisterTransaction /></>} />
+            <Route path="/transactions" element={<><Navbar/> <Transactions /></>} />
             <Route path="/categories" element={<><Navbar/> <Categories /></>} />
             <Route path="/budgets" element={<><Navbar/> <Budgets /></>} />
-            <Route path="/transactions" element={<><Navbar/> <Transactions /></>} />
             <Route path="/banksAndCards" element={<><Navbar/> <BanksAndCards /></>} />
             {/* Adicione outras rotas protegidas aqui */}
           </Route>

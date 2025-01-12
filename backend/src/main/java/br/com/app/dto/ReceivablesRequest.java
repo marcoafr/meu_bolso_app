@@ -12,6 +12,8 @@ public class ReceivablesRequest {
     private LocalDate to;
     private List<Integer> status;
     private Integer transactionType;
+    private Integer page;
+    private Integer pageSize;
 
     // Getters and Setters
     public List<Long> getBankAccounts() {
@@ -76,5 +78,21 @@ public class ReceivablesRequest {
             return !to.isBefore(from) && to.isBefore(from.plusDays(365));
         }
         return false;
+    }
+
+    public Integer getPage() {
+        return page;
+    }
+
+    public void setPage(Integer page) {
+        this.page = page;
+    }
+
+    public Integer getPageSize() {
+        return pageSize;
+    }
+
+    public void setPageSize(Integer pageSize) {
+        this.pageSize = pageSize;
     }
 }

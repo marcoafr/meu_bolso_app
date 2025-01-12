@@ -127,6 +127,10 @@ VALUES ('C6 Bank', '#A8A2AB', 24, 1, currval(pg_get_serial_sequence('users', 'id
 INSERT INTO transactions (total_amount, issue_date, category_id, user_id, credit_card_id, status)
 VALUES (200, '2024-12-01', currval(pg_get_serial_sequence('categories', 'id')), currval(pg_get_serial_sequence('users', 'id')), currval(pg_get_serial_sequence('credit_cards', 'id')), 0);
 
--- Inserir receivable único
+-- Inserir receivables
+INSERT INTO receivables (total_amount, status, transaction_id, competence_date, bank_account_id, user_id)
+VALUES (66.67, 1, currval(pg_get_serial_sequence('transactions', 'id')), '2024-12-01', currval(pg_get_serial_sequence('bank_accounts', 'id')), currval(pg_get_serial_sequence('users', 'id')));
 INSERT INTO receivables (total_amount, status, transaction_id, competence_date, user_id)
-VALUES (200, 0, currval(pg_get_serial_sequence('transactions', 'id')), '2024-12-01', currval(pg_get_serial_sequence('users', 'id')));
+VALUES (66.66, 0, currval(pg_get_serial_sequence('transactions', 'id')), '2025-01-01', currval(pg_get_serial_sequence('users', 'id')));
+INSERT INTO receivables (total_amount, status, transaction_id, competence_date, user_id)
+VALUES (66.66, 0, currval(pg_get_serial_sequence('transactions', 'id')), '2025-02-01', currval(pg_get_serial_sequence('users', 'id')));

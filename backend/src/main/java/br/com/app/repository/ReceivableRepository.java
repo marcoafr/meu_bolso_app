@@ -14,4 +14,6 @@ public interface ReceivableRepository extends JpaRepository<Receivable, Long>, R
            "JOIN FETCH r.transaction t " +
            "WHERE r.user.id = :userId")
     List<Receivable> findByUserId(Long userId);
+
+    List<Receivable> findByTransactionId(Long transactionId);
 }

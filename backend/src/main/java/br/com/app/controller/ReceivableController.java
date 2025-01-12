@@ -1,13 +1,20 @@
 package br.com.app.controller;
 
+import br.com.app.Constants;
 import br.com.app.dto.CategoryDTO;
+import br.com.app.dto.CreditCardDTO;
+import br.com.app.dto.LiquidationRequestDTO;
 import br.com.app.dto.ReceivableDTO;
 import br.com.app.dto.ReceivablesRequest;
 import br.com.app.dto.TransactionDTO;
+import br.com.app.exception.ResourceNotFoundException;
+import br.com.app.model.BankAccount;
 import br.com.app.model.Category;
 import br.com.app.model.Receivable;
 import br.com.app.model.Transaction;
 import br.com.app.repository.ReceivableRepository;
+import br.com.app.repository.TransactionRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +28,9 @@ public class ReceivableController {
 
     @Autowired
     private ReceivableRepository receivableRepository;
+    
+    @Autowired
+    private TransactionRepository transactionRepository;
 
     @PostMapping("/searchAnalytical")
     @Transactional
@@ -77,4 +87,59 @@ public class ReceivableController {
 
         return receivableDTOs;    
     }
+
+    
+    // Endpoint para liquidar um receivable
+    @PostMapping("/liquidate")
+    public ReceivableDTO liquidate(@RequestBody LiquidationRequestDTO liquidationRequest) {
+        // Recuperar o receivable a ser liquidado
+        Receivable receivable = receivableRepository.findById(liquidationRequest.getReceivableId())
+            .orElseThrow(() -> new ResourceNotFoundException("Receivable not found"));
+
+        // Verificar se o status do receivable é 0 (pendente)
+        if (receivable.getStatus() != Constants.TransactionStatus.PENDING) {
+            throw new IllegalStateException("Receivable is not in a liquidable state.");
+        }
+    
+        // Alterar o status do receivable para 1 (liquidado)
+        receivable.setStatus(Constants.TransactionStatus.PAID);
+        receivable.setBankAccount(new BankAccount());
+        receivable.getBankAccount().setId(liquidationRequest.getBankAccountId());
+        receivable.setPaymentDate(liquidationRequest.getPaymentDate());
+        receivable.setPaidAmount(receivable.getTotalAmount());
+        receivableRepository.save(receivable);
+    
+        // Recuperar a transaction associada a este receivable
+        Transaction transaction = receivable.getTransaction();
+    
+        // Verificar outros receivables da mesma transaction
+        List<Receivable> transactionReceivables = receivableRepository.findByTransactionId(transaction.getId());
+    
+        // Verificar se há outros receivables com status 0 (pendente)
+        boolean hasPendingReceivables = transactionReceivables.stream()
+                .anyMatch(r -> r.getStatus() == Constants.TransactionStatus.PENDING && !r.getId().equals(liquidationRequest.getReceivableId()));
+    
+        // Atualizar o status da transaction
+        if (hasPendingReceivables) {
+            // Se houver outros pendentes, a transaction deve ser parcialmente paga (status 2)
+            transaction.setStatus(Constants.TransactionStatus.PARTIALLY_PAID);
+        } else {
+            // Caso contrário, a transaction pode ser totalmente paga (status 1)
+            transaction.setStatus(Constants.TransactionStatus.PAID);
+        }
+    
+        // Salvar a transaction com o status atualizado
+        transactionRepository.save(transaction);
+    
+        // Retornar o DTO do receivable
+        return new ReceivableDTO(
+            receivable.getId(),
+            receivable.getTotalAmount(),
+            receivable.getCompetenceDate(),
+            receivable.getStatus().getValue(),
+            receivable.getBankAccount().getId(),
+            receivable.getBankAccount().getName(),
+            null
+        );
+    }    
 }

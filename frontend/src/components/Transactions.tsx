@@ -1,7 +1,6 @@
-import { Typography, Container, Box, Button, Grid, Card, CardContent, IconButton, Tooltip, Chip, Menu, MenuItem, Select, InputLabel, FormControl, CircularProgress } from "@mui/material";
+import { Typography, Container, Box, Button, Grid, Card, CardContent, IconButton, Tooltip, Chip, Menu, MenuItem, Select, InputLabel, FormControl, CircularProgress, TextField, Modal } from "@mui/material";
 import { useState } from "react";
 import DateDirective from "../directives/DateDirective";
-import TransactionTypeFilter from "../directives/TransactionTypeDirective";
 import CategoryDirective from "../directives/CategoryDirective";
 import CardDirective from "../directives/CardDirective";
 import BankDirective from "../directives/BankDirective";
@@ -10,6 +9,7 @@ import { receivableService } from "../api/receivableService";
 import { Check, Edit, Clear, Delete } from "@mui/icons-material";
 import { formatCurrency, formatDate } from "../util/Util";
 import { useSnackbar } from "../directives/snackbar/SnackbarContext";
+import TransactionTypeDirective from "../directives/TransactionTypeDirective";
 
 const Transactions = () => {
   const { showSnackbar } = useSnackbar(); // Usando o hook do Snackbar
@@ -35,6 +35,12 @@ const Transactions = () => {
   const [sortOption, setSortOption] = useState<string>("data"); // Estado para armazenar a opção de classificação
   const [loading, setLoading] = useState<boolean>(false); // Estado para controle de loading
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null); // Estado para controle do Menu
+
+  // Modal Liquidação
+  const [openModalLiquidation, setOpenModalLiquidation] = useState<boolean>(false); // Controla a exibição do modal
+  const [selectedReceivableLiquidation, setSelectedReceivableLiquidation] = useState<number | null>(null); // Armazena o banco selecionado
+  const [selectedBankAccountLiquidation, setSelectedBankAccountLiquidation] = useState<number | null>(null); // Armazena o banco selecionado
+  const [paymentDateLiquidation, setPaymentDateLiquidation] = useState(new Date().toISOString().split("T")[0]); // Data de pagamento padrão (hoje)
 
   const handleFilterChange = (key: keyof typeof filters, value: any) => {
     setFilters((prev) => ({
@@ -110,7 +116,28 @@ const Transactions = () => {
   };
 
   const handleLiquidate = (id: number) => {
-    console.log("Liquidar", id);
+    setSelectedReceivableLiquidation(id); // Armazena o id da transação
+    setSelectedBankAccountLiquidation(null); // Reseta o banco selecionado
+    setPaymentDateLiquidation(new Date().toISOString().split("T")[0]); // Define a data de pagamento como hoje
+    setOpenModalLiquidation(true); // Abre o modal
+  };
+
+  const handleModalCloseLiquidation = () => {
+    setOpenModalLiquidation(false); // Fecha o modal
+  };
+  
+  const handleConfirmLiquidation = () => {
+    if (selectedBankAccountLiquidation && paymentDateLiquidation) {
+      receivableService.liquidate({receivableId: selectedReceivableLiquidation, bankAccountId: selectedBankAccountLiquidation, paymentDate: paymentDateLiquidation})
+        .then(() => {
+          showSnackbar("Liquidação realizada com sucesso", "success");
+          handleModalCloseLiquidation(); // Fecha o modal após a liquidação
+          handleSearch();
+        })
+        .catch(() => {
+          showSnackbar("Erro ao liquidar", "error");
+        });
+    }
   };
 
   const handleEdit = (id: number) => {
@@ -142,7 +169,7 @@ const Transactions = () => {
             />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TransactionTypeFilter
+            <TransactionTypeDirective
               value={filters.transactionType!}
               onChange={(value) => handleFilterChange("transactionType", value)}
             />
@@ -236,33 +263,37 @@ const Transactions = () => {
                     </Typography>
                     <Typography variant="body1" textAlign="right">Categoria: {r.transactionDTO.categoryName}</Typography>
                   </Box>
-                  {r.bankName && <Typography variant="body1">Banco: {r.bankName}</Typography>}
-                  <Box display="flex" justifyContent="flex-end" mt={2}>
-                    {r.status === 3 ? (
-                      <Tooltip title="Deletar">
-                        <IconButton onClick={() => handleDelete(r.id)} color="error">
-                          <Delete />
-                        </IconButton>
-                      </Tooltip>
-                    ) : (
-                      <>
-                        <Tooltip title="Liquidar">
-                          <IconButton onClick={() => handleLiquidate(r.id)} color="success">
-                            <Check />
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
+                    <Box flexGrow={1}>
+                      {r.bankName && <Typography variant="body1">Banco: {r.bankName}</Typography>}
+                    </Box>
+                    <Box display="flex" justifyContent="flex-end">
+                      {r.status === 3 || r.status === 1 ? (
+                        <Tooltip title="Deletar">
+                          <IconButton onClick={() => handleDelete(r.id)} color="error">
+                            <Delete />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title="Editar">
-                          <IconButton onClick={() => handleEdit(r.id)} color="primary">
-                            <Edit />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Cancelar">
-                          <IconButton onClick={() => handleCancel(r.id)} color="error">
-                            <Clear />
-                          </IconButton>
-                        </Tooltip>
-                      </>
-                    )}
+                      ) : (
+                        <>
+                          <Tooltip title="Liquidar">
+                            <IconButton onClick={() => handleLiquidate(r.id)} color="success">
+                              <Check />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Editar">
+                            <IconButton onClick={() => handleEdit(r.id)} color="primary">
+                              <Edit />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Cancelar">
+                            <IconButton onClick={() => handleCancel(r.id)} color="error">
+                              <Clear />
+                            </IconButton>
+                          </Tooltip>
+                        </>
+                      )}
+                    </Box>
                   </Box>
                 </CardContent>
               </Card>
@@ -270,6 +301,39 @@ const Transactions = () => {
           ))}
         </Grid>
       </Box>
+
+      {/* Modal de Liquidação */}
+      <Modal open={openModalLiquidation} onClose={handleModalCloseLiquidation}>
+        <Box sx={{
+          position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", 
+          bgcolor: "background.paper", padding: 4, borderRadius: 2, boxShadow: 3
+        }}>
+          <Typography variant="h6" gutterBottom>Liquidar Transação</Typography>
+
+          <BankDirective
+            value={selectedBankAccountLiquidation ? [selectedBankAccountLiquidation] : []}
+            multiple={false}
+            onChange={(value) => setSelectedBankAccountLiquidation(Array.isArray(value) ? value[0] : value)}
+          />
+
+          <TextField
+            label="Data de Pagamento"
+            type="date"
+            value={paymentDateLiquidation}
+            onChange={(e) => setPaymentDateLiquidation(e.target.value)}
+            fullWidth
+            sx={{ mt: 2 }}
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+
+          <Box display="flex" justifyContent="space-between" sx={{ mt: 2, gap: 2 }}>
+            <Button variant="outlined" onClick={handleModalCloseLiquidation}>Fechar</Button>
+            <Button variant="contained" color="primary" onClick={handleConfirmLiquidation}>Confirmar</Button>
+          </Box>
+        </Box>
+      </Modal>
     </Container>
   );
 };
