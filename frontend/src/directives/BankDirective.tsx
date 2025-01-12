@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { TextField, MenuItem, CircularProgress } from '@mui/material';
+import { CircularProgress } from '@mui/material';
+import MultiAutoCompleteSelect  from './MultiAutoCompleteSelect'; // Supondo que o componente MultiAutoCompleteSelect esteja no caminho correto
 import { bankAccountService } from '../api/bankAccountService'; // Importando o serviço
 import { useAuth } from '../authContext';
 
 interface BankDirectiveProps {
   multiple?: boolean; // Permitir múltiplas seleções (padrão: true)
-  value: string | string[] | number | number[]; // Valor atual (ID ou IDs das contas bancárias)
-  onChange: (value: string | string[]) => void; // Callback para atualizar o valor
+  value: number | number[]; // Valor atual (ID ou IDs das contas bancárias)
+  onChange: (value: number | number[]) => void; // Callback para atualizar o valor
 }
 
 const BankDirective: React.FC<BankDirectiveProps> = ({
@@ -38,22 +39,6 @@ const BankDirective: React.FC<BankDirectiveProps> = ({
       });
   }, [user]);
 
-  const getDisplayValue = () => {
-    if (multiple && Array.isArray(value)) {
-      return bankAccounts
-        .filter((account) => value.includes(account.id))
-        .map((account) => account.name)
-        .join(', ');
-    } else if (!multiple && typeof value === 'string') {
-      const account = bankAccounts.find((account) => account.id === value);
-      return account ? account.name : '';
-    } else if (!multiple && typeof value === 'number') {
-      const account = bankAccounts.find((account) => account.id === value);
-      return account ? account.name : '';
-    }
-    return '';
-  };
-
   if (loading) {
     return <CircularProgress />;
   }
@@ -62,36 +47,30 @@ const BankDirective: React.FC<BankDirectiveProps> = ({
     return <p style={{ color: 'red' }}>{error}</p>;
   }
 
-  const handleChange = (e: React.ChangeEvent<{ value: any }>) => {
-    const selectedValue = e.target.value;
+  const handleChange = (newValue: number | number[]) => {
     if (multiple) {
-      const updatedValue = Array.isArray(value)
-        ? [...value, selectedValue.toString()]
-        : [selectedValue.toString()];
-      onChange(updatedValue);
+      // Garante que sempre será um array de números
+      onChange(newValue);
     } else {
-      onChange(selectedValue.toString());
+      onChange(newValue);
     }
   };
 
+  // Mapeando as contas bancárias para o formato esperado pelo MultiAutoCompleteSelect
+  const options = bankAccounts.map((account) => ({
+    id: account.id,
+    label: account.name,
+  }));
+
   return (
-    <TextField
-      select
-      fullWidth
-      label="Conta Bancária"
+    <MultiAutoCompleteSelect
       value={value}
+      multiple={multiple}
       onChange={handleChange}
-      SelectProps={{
-        multiple: multiple,
-        renderValue: getDisplayValue, // Exibe os nomes das contas bancárias no TextField
-      }}
-    >
-      {bankAccounts.map((account) => (
-        <MenuItem key={account.id} value={account.id}>
-          {account.name}
-        </MenuItem>
-      ))}
-    </TextField>
+      options={options} // Passa as opções mapeadas
+      label="Conta Bancária"
+      getOptionLabel={(option) => option.label} // Função para exibir o nome da conta
+    />
   );
 };
 

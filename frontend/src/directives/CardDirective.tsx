@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { TextField, MenuItem, CircularProgress } from '@mui/material';
+import { CircularProgress } from '@mui/material';
+import MultiAutoCompleteSelect from './MultiAutoCompleteSelect'; // Importe o MultiAutoCompleteSelect
 import { creditCardService } from '../api/creditCardService'; // Importando o serviço de cartões de crédito
 import { useAuth } from '../authContext';
 
 interface CardDirectiveProps {
   multiple?: boolean; // Permitir múltiplas seleções (padrão: true)
-  value: string | string[] | number | number[]; // Valor atual (ID ou IDs dos cartões de crédito)
-  onChange: (value: string | string[]) => void; // Callback para atualizar o valor
+  value: number | number[]; // Valor atual (ID ou IDs dos cartões de crédito)
+  onChange: (value: number | number[]) => void; // Callback para atualizar o valor
 }
 
 const CardDirective: React.FC<CardDirectiveProps> = ({
@@ -38,22 +39,7 @@ const CardDirective: React.FC<CardDirectiveProps> = ({
       });
   }, [user]);
 
-  const getDisplayValue = () => {
-    if (multiple && Array.isArray(value)) {
-      return creditCards
-        .filter((card) => value.includes(card.id))
-        .map((card) => card.name)
-        .join(', ');
-    } else if (!multiple && typeof value === 'string') {
-      const card = creditCards.find((card) => card.id === value);
-      return card ? card.name : '';
-    } else if (!multiple && typeof value === 'number') {
-      const card = creditCards.find((card) => card.id === value);
-      return card ? card.name : '';
-    }
-    return '';
-  };
-
+  // Se não estiver carregando e não houver erro, renderize o MultiAutoCompleteSelect
   if (loading) {
     return <CircularProgress />;
   }
@@ -62,36 +48,24 @@ const CardDirective: React.FC<CardDirectiveProps> = ({
     return <p style={{ color: 'red' }}>{error}</p>;
   }
 
-  const handleChange = (e: React.ChangeEvent<{ value: any }>) => {
-    const selectedValue = e.target.value;
-    if (multiple) {
-      const updatedValue = Array.isArray(value)
-        ? [...value, selectedValue.toString()]
-        : [selectedValue.toString()];
-      onChange(updatedValue);
-    } else {
-      onChange(selectedValue.toString());
-    }
+  const options = creditCards.map((card) => ({
+    id: card.id,
+    label: card.name,
+  }));
+
+  const handleChange = (newValue: number | number[]) => {
+    // Lida com a mudança, garantindo que o valor esteja no formato esperado
+    onChange(newValue);
   };
 
   return (
-    <TextField
-      select
-      fullWidth
-      label="Cartão de Crédito"
+    <MultiAutoCompleteSelect
       value={value}
       onChange={handleChange}
-      SelectProps={{
-        multiple: multiple,
-        renderValue: getDisplayValue, // Exibe os nomes dos cartões de crédito no TextField
-      }}
-    >
-      {creditCards.map((card) => (
-        <MenuItem key={card.id} value={card.id}>
-          {card.name}
-        </MenuItem>
-      ))}
-    </TextField>
+      options={options}
+      label="Cartão de Crédito"
+      multiple={multiple}
+    />
   );
 };
 

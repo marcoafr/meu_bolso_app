@@ -213,7 +213,6 @@ const Budgets = () => {
               multiple={false} // Apenas uma categoria pode ser selecionada
               value={newBudget.categoryId} // Categoria atual do orçamento
               onChange={(categoryId) => {
-                console.log(categoryId)
                 setNewBudget({ ...newBudget, categoryId: + categoryId })
               }} // Atualiza o estado
               includeTypeOnName={true} // Incluir "Despesa" ou "Receita" no nome
