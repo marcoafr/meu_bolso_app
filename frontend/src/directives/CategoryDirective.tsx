@@ -4,7 +4,7 @@ import MultiAutoCompleteSelect from './MultiAutoCompleteSelect'; // Importe o Mu
 import { categoryService } from '../api/categoryService';
 import { useAuth } from '../authContext';
 
-interface CategoryDirectiveProps {
+export interface CategoryDirectiveProps {
   multiple?: boolean; // Permitir múltiplas seleções (padrão: true)
   showOnlyReceiptOrExpense?: 'receipt' | 'expense'; // Filtrar por tipo (0: receipt, 1: expense)
   value: number | number[]; // Valor atual (ID ou IDs das categorias)

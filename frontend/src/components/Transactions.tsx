@@ -1,4 +1,4 @@
-import { Typography, Container, Box, Button, Grid, Card, CardContent, IconButton, Tooltip, Chip, Menu, MenuItem, Select, InputLabel, FormControl, CircularProgress, TextField, Modal } from "@mui/material";
+import { Typography, Container, Box, Button, Grid, Card, CardContent, IconButton, Tooltip, Chip, Menu, MenuItem, Select, InputLabel, FormControl, CircularProgress, TextField, Modal, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 import { useState } from "react";
 import DateDirective from "../directives/DateDirective";
 import CategoryDirective from "../directives/CategoryDirective";
@@ -10,6 +10,7 @@ import { Check, Edit, Clear, Delete } from "@mui/icons-material";
 import { formatCurrency, formatDate } from "../util/Util";
 import { useSnackbar } from "../directives/snackbar/SnackbarContext";
 import TransactionTypeDirective from "../directives/TransactionTypeDirective";
+import CategoryEntityDirective from "../directives/CategoryEntityDirective";
 
 const Transactions = () => {
   const { showSnackbar } = useSnackbar(); // Usando o hook do Snackbar
@@ -41,6 +42,12 @@ const Transactions = () => {
   const [selectedReceivableLiquidation, setSelectedReceivableLiquidation] = useState<number | null>(null); // Armazena o banco selecionado
   const [selectedBankAccountLiquidation, setSelectedBankAccountLiquidation] = useState<number | null>(null); // Armazena o banco selecionado
   const [paymentDateLiquidation, setPaymentDateLiquidation] = useState(new Date().toISOString().split("T")[0]); // Data de pagamento padrão (hoje)
+
+  // Modal Edição
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [editData, setEditData] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [dialogMessages, setDialogMessages] = useState<string[]>([]);
 
   const handleFilterChange = (key: keyof typeof filters, value: any) => {
     setFilters((prev) => ({
@@ -76,6 +83,7 @@ const Transactions = () => {
   const handleMenuClose = (value: string) => {
     setSortOption(value); // Atualiza a opção de classificação
     setAnchorEl(null); // Fecha o menu
+    handleSort(); // Chama a função de ordenação
   };
 
   const handleSort = () => {
@@ -140,8 +148,73 @@ const Transactions = () => {
     }
   };
 
-  const handleEdit = (id: number) => {
-    console.log("Editar", id);
+  const handleEdit = (receivable: any) => {
+    setEditData({
+      ...receivable,
+      /*
+      transactionDTO: {
+        ...receivable.transactionDTO, 
+        categoryDTO: {
+          ...receivable.transactionDTO.categoryDTO
+        }
+      },
+      */
+      updatedAmount: receivable.amount,
+      updatedCategory: {...receivable.transactionDTO.categoryDTO},
+      originalCategoryName: receivable.transactionDTO.categoryDTO.name,
+      updatedCompetenceDate: receivable.competenceDate,
+    });
+    setOpenEditModal(true);
+  };
+  
+  const handleEditSave = () => {
+    const messages = [];
+    console.log("editData", editData)
+    if (editData.amount !== editData.updatedAmount) {
+      messages.push(
+        `Alterar valor de R$ ${formatCurrency(editData.amount)} para R$ ${formatCurrency(editData.updatedAmount)}.`
+      );
+    }
+    if (editData.transactionDTO.categoryDTO.id !== editData.updatedCategory.id) {
+      messages.push(
+        `Alterar categoria de "${editData.transactionDTO.categoryDTO.name}" para "${editData.updatedCategory.name}". Isso irá alterar a categoria de todas as parcelas dessa compra, caso seja parcelada.`
+      );
+    }
+    if (editData.competenceDate !== editData.updatedCompetenceDate) {
+      messages.push(
+        `Alterar data de competência de ${formatDate(editData.competenceDate)} para ${formatDate(editData.updatedCompetenceDate)}.`
+      );
+    }
+  
+    if (messages.length > 0) {
+      setDialogMessages(messages);
+      setIsDialogOpen(true); // Abre o Dialog
+    } else {
+      showSnackbar("Nenhuma alteração foi feita.", "info");
+    }
+  };  
+
+  // Função para confirmar a alteração
+  const confirmEdit = () => {
+    receivableService
+      .updateTransaction(editData.id, {
+        amount: editData.updatedAmount,
+        categoryId: editData.updatedCategory,
+        competenceDate: editData.updatedCompetenceDate,
+      })
+      .then(() => {
+        showSnackbar("Alterações salvas com sucesso!", "success");
+        setOpenEditModal(false);
+        handleSearch(); // Atualize a lista de transações
+      })
+      .catch(() => {
+        showSnackbar("Erro ao salvar alterações.", "error");
+      })
+      .finally(() => setIsDialogOpen(false)); // Fecha o Dialog após a confirmação
+  };
+  
+  const handleEditClose = () => {
+    setOpenEditModal(false);
   };
 
   const handleCancel = (id: number) => {
@@ -282,7 +355,7 @@ const Transactions = () => {
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Editar">
-                            <IconButton onClick={() => handleEdit(r.id)} color="primary">
+                            <IconButton onClick={() => handleEdit(r)} color="primary">
                               <Edit />
                             </IconButton>
                           </Tooltip>
@@ -334,6 +407,86 @@ const Transactions = () => {
           </Box>
         </Box>
       </Modal>
+
+      {/* Modal de Edição */}
+      <Modal open={openEditModal} onClose={handleEditClose}>
+        <Box sx={{ width: 400, padding: 4, margin: "auto", mt: 10, backgroundColor: "white", borderRadius: 2 }}>
+          <Typography variant="h6" gutterBottom>
+            Editar Transação
+          </Typography>
+          <TextField
+            label="Valor"
+            type="number"
+            fullWidth
+            value={editData?.updatedAmount || ""}
+            onChange={(e) => setEditData({ ...editData, updatedAmount: parseFloat(e.target.value) })}
+            sx={{ mb: 2 }}
+          />
+          <Typography variant="body1" gutterBottom>
+            Categoria original: {editData?.originalCategoryName}
+          </Typography>
+          <CategoryEntityDirective
+            multiple={false} // Seleção única
+            showOnlyReceiptOrExpense={
+              editData?.transactionDTO?.categoryDTO?.type === 0 ? "receipt" : "expense"
+            } // Define o tipo de categoria com base no type
+            value={editData?.updatedCategory} // Valor atual como entidade ou null
+            onChange={(newValue) => {
+              console.log("newValue", newValue)
+              setEditData({
+                ...editData,
+                updatedCategory: newValue,
+              });
+            }} // Atualiza o estado com a nova categoria
+          />
+          <TextField
+            label="Data de Competência"
+            type="date"
+            fullWidth
+            value={editData?.updatedCompetenceDate || ""}
+            onChange={(e) => setEditData({ ...editData, updatedCompetenceDate: e.target.value })}
+            InputLabelProps={{ shrink: true }}
+            sx={{mt: 2}}
+          />
+          <Box display="flex" justifyContent="space-between" mt={3}>
+            <Button variant="outlined" color="secondary" onClick={handleEditClose}>
+              Cancelar
+            </Button>
+            <Button variant="contained" color="primary" onClick={handleEditSave}>
+              Salvar Alterações
+            </Button>
+          </Box>
+        </Box>
+
+      </Modal>
+        {/* Seu código existente */}
+        <Dialog
+          open={isDialogOpen}
+          onClose={() => setIsDialogOpen(false)}
+          aria-labelledby="confirm-dialog-title"
+          aria-describedby="confirm-dialog-description"
+        >
+          <DialogTitle id="confirm-dialog-title">Confirmar Alterações</DialogTitle>
+          <DialogContent>
+            <DialogContentText id="confirm-dialog-description">
+              Você está prestes a:
+              <ul>
+              {dialogMessages.map((message, index) => (
+                <li key={index}>{message}</li>
+              ))}
+            </ul>
+            Deseja confirmar?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsDialogOpen(false)} color="secondary">
+            Cancelar
+          </Button>
+          <Button onClick={confirmEdit} color="primary" autoFocus>
+            Confirmar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
