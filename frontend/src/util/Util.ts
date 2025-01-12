@@ -23,3 +23,12 @@ export const formatLocalDate = (date: { year: number, month: number, day: number
 
   return `${year}-${month}-${day}`;
 };
+
+export const formatDate = (dateString: string) => {
+  const date = new Date(dateString + "T00:00:00Z"); // Garantir que a data seja interpretada como UTC
+  const day = String(date.getUTCDate()).padStart(2, "0"); // Usa getUTCDate() para evitar o fuso horário local
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0"); // Usa getUTCMonth()
+  const year = date.getUTCFullYear(); // Usa getUTCFullYear()
+
+  return `${day}/${month}/${year}`;
+};

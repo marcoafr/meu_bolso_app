@@ -13,8 +13,8 @@ const PaymentStatusDirective: React.FC<PaymentStatusDirectiveProps> = ({
   multiple = false,
 }) => {
   const statusOptions = [
-    { id: 0, label: "Pago" },
-    { id: 1, label: "Pendente" },
+    { id: 0, label: "Pendente" },
+    { id: 1, label: "Pago" },
     { id: 3, label: "Cancelado" },
   ];
 

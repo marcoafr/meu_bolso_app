@@ -8,6 +8,7 @@
 
 # Java
 /target/
+*.class
 
 # Database files
 /db/data/

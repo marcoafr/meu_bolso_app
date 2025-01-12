@@ -1,13 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TextField, Grid } from '@mui/material';
 
 interface DateDirectiveProps {
   onChange: (dates: { from: string | null; to: string | null }) => void;
+  initialDates?: { from: string; to: string };
 }
 
-const DateDirective: React.FC<DateDirectiveProps> = ({ onChange }) => {
-  const [fromDate, setFromDate] = useState<string | null>(null);
-  const [toDate, setToDate] = useState<string | null>(null);
+const DateDirective: React.FC<DateDirectiveProps> = ({ onChange, initialDates }) => {
+  const [fromDate, setFromDate] = useState<string | null>(initialDates?.from || null);
+  const [toDate, setToDate] = useState<string | null>(initialDates?.to || null);
+
+  // Atualiza os valores iniciais no momento da montagem
+  useEffect(() => {
+    if (initialDates) {
+      setFromDate(initialDates.from);
+      setToDate(initialDates.to);
+      onChange(initialDates);
+    }
+  }, [initialDates, onChange]);
 
   const handleFromChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFromDate(e.target.value);

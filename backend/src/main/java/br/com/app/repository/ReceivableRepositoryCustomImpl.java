@@ -1,5 +1,6 @@
 package br.com.app.repository;
 
+import br.com.app.Constants;
 import br.com.app.dto.ReceivablesRequest;
 import br.com.app.model.Receivable;
 import br.com.app.model.Transaction;
@@ -13,6 +14,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.*;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Repository
 public class ReceivableRepositoryCustomImpl implements ReceivableRepositoryCustom {
@@ -43,17 +46,17 @@ public class ReceivableRepositoryCustomImpl implements ReceivableRepositoryCusto
 
         // Filtrando por bankAccounts (relacionado com receivables)
         if (request.getBankAccounts() != null && !request.getBankAccounts().isEmpty()) {
-            predicates[index++] = receivable.get("bankAccountId").in(request.getBankAccounts());
+            predicates[index++] = bankAccount.get("id").in(request.getBankAccounts());
         }
 
         // Filtrando por categories (relacionado com transactions)
         if (request.getCategories() != null && !request.getCategories().isEmpty()) {
-            predicates[index++] = transaction.get("categoryId").in(request.getCategories());
+            predicates[index++] = category.get("id").in(request.getCategories());
         }
 
         // Filtrando por creditCards (relacionado com transactions)
         if (request.getCreditCards() != null && !request.getCreditCards().isEmpty()) {
-            predicates[index++] = transaction.get("creditCardId").in(request.getCreditCards());
+            predicates[index++] = creditCard.get("id").in(request.getCreditCards());
         }
 
         // Filtrando por from e to (relacionado com competenceDate de receivable)
@@ -66,7 +69,17 @@ public class ReceivableRepositoryCustomImpl implements ReceivableRepositoryCusto
 
         // Filtrando por status (relacionado com receivables)
         if (request.getStatus() != null && !request.getStatus().isEmpty()) {
-            predicates[index++] = receivable.get("status").in(request.getStatus());
+            List<Integer> statusOrdinals = request.getStatus().stream()
+                .map(statusValue -> {
+                    Constants.TransactionStatus transactionStatus = Constants.TransactionStatus.fromValue(statusValue); // Converte Integer para Enum
+                    return transactionStatus != null ? transactionStatus.ordinal() : null; // Pega o ordinal do Enum
+                })
+                .filter(Objects::nonNull) // Remove valores nulos caso algum Integer não corresponda a um Enum
+                .collect(Collectors.toList());
+
+            if (!statusOrdinals.isEmpty()) {
+                predicates[index++] = receivable.get("status").in(statusOrdinals); // Passa os ordinals (números) para a consulta
+            }
         }
 
         // Filtrando por transactionType (relacionado com category)
