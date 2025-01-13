@@ -35,6 +35,9 @@ public class Receivable {
     @Column(name = "competence_date", nullable = false)
     private LocalDate competenceDate;
 
+    @Column(name = "card_competence_date", nullable = false)
+    private LocalDate cardCompetenceDate;
+
     @Enumerated(EnumType.ORDINAL)
     @Column(nullable = false) // default: Constants.Status.PENDING
     private Constants.TransactionStatus status;
@@ -179,6 +182,14 @@ public class Receivable {
 
     public void setCompetenceDate(LocalDate competenceDate) {
         this.competenceDate = competenceDate;
+    }
+    
+    public LocalDate getCardCompetenceDate() {
+        return cardCompetenceDate;
+    }
+
+    public void setCardCompetenceDate(LocalDate cardCompetenceDate) {
+        this.cardCompetenceDate = cardCompetenceDate;
     }
     
     public LocalDate getPaymentDate() {

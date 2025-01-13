@@ -159,6 +159,7 @@ public class CreateTransactionController {
             Receivable receivable = new Receivable();
             receivable.setTotalAmount(installmentValue.add(i == dto.getInstallments() - 1 ? remainder : BigDecimal.ZERO));
             receivable.setCompetenceDate(competenceDate);
+            receivable.setCardCompetenceDate(competenceDate);
             receivable.setTransaction(transaction);
             receivable.setStatus(Constants.TransactionStatus.PENDING); // Status inicial padrão
             
@@ -208,6 +209,7 @@ public class CreateTransactionController {
             Receivable receivable = new Receivable();
             receivable.setTotalAmount(dto.getTotalAmount());
             receivable.setCompetenceDate(issueDate);
+            receivable.setCardCompetenceDate(issueDate);
             receivable.setTransaction(transaction);
             receivable.setStatus(Constants.TransactionStatus.PENDING); // Status inicial padrão
             receivable.setMetadata("{}");
@@ -247,6 +249,7 @@ public class CreateTransactionController {
         Receivable receivable = new Receivable();
         receivable.setTotalAmount(dto.getTotalAmount());
         receivable.setCompetenceDate(dto.getDate());
+        receivable.setCardCompetenceDate(dto.getDate());
         receivable.setTransaction(transaction);
         receivable.setStatus(Constants.TransactionStatus.PENDING); // Status inicial padrão
         receivable.setMetadata("{}");

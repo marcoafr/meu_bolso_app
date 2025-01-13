@@ -81,6 +81,7 @@ CREATE TABLE receivables (
     tax_amount NUMERIC(11, 2) DEFAULT 0, 
     paid_amount NUMERIC(11, 2) DEFAULT 0, 
     competence_date DATE NOT NULL, 
+    card_competence_date DATE NOT NULL, 
     status INTEGER NOT NULL CHECK (status IN (0, 1, 3, 4)), -- 0 - Pending, 1 - Paid, 3 - Canceled, 4 - Deleted;
     transaction_id BIGINT NOT NULL REFERENCES transactions(id), 
     user_id BIGINT NOT NULL REFERENCES users(id),
@@ -128,9 +129,9 @@ INSERT INTO transactions (total_amount, issue_date, category_id, user_id, credit
 VALUES (200, '2024-12-01', currval(pg_get_serial_sequence('categories', 'id')), currval(pg_get_serial_sequence('users', 'id')), currval(pg_get_serial_sequence('credit_cards', 'id')), 0);
 
 -- Inserir receivables
-INSERT INTO receivables (total_amount, status, transaction_id, competence_date, bank_account_id, user_id, metadata)
-VALUES (66.67, 1, currval(pg_get_serial_sequence('transactions', 'id')), '2024-12-01', currval(pg_get_serial_sequence('bank_accounts', 'id')), currval(pg_get_serial_sequence('users', 'id')), '{"installment": 1, "total_installments": 3}');
-INSERT INTO receivables (total_amount, status, transaction_id, competence_date, user_id, metadata)
-VALUES (66.66, 0, currval(pg_get_serial_sequence('transactions', 'id')), '2025-01-01', currval(pg_get_serial_sequence('users', 'id')), '{"installment": 2, "total_installments": 3}');
-INSERT INTO receivables (total_amount, status, transaction_id, competence_date, user_id, metadata)
-VALUES (66.66, 0, currval(pg_get_serial_sequence('transactions', 'id')), '2025-02-01', currval(pg_get_serial_sequence('users', 'id')), '{"installment": 3, "total_installments": 3}');
+INSERT INTO receivables (total_amount, status, transaction_id, competence_date, card_competence_date, bank_account_id, user_id, metadata)
+VALUES (66.67, 1, currval(pg_get_serial_sequence('transactions', 'id')), '2024-12-01', '2024-12-01', currval(pg_get_serial_sequence('bank_accounts', 'id')), currval(pg_get_serial_sequence('users', 'id')), '{"installment": 1, "total_installments": 3}');
+INSERT INTO receivables (total_amount, status, transaction_id, competence_date, card_competence_date, user_id, metadata)
+VALUES (66.66, 0, currval(pg_get_serial_sequence('transactions', 'id')), '2025-01-01', '2025-01-01', currval(pg_get_serial_sequence('users', 'id')), '{"installment": 2, "total_installments": 3}');
+INSERT INTO receivables (total_amount, status, transaction_id, competence_date, card_competence_date, user_id, metadata)
+VALUES (66.66, 0, currval(pg_get_serial_sequence('transactions', 'id')), '2025-02-01', '2025-02-01', currval(pg_get_serial_sequence('users', 'id')), '{"installment": 3, "total_installments": 3}');

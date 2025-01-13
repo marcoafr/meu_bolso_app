@@ -60,6 +60,7 @@ public class TransactionController {
                 receivable.getUser().setId(dto.getUserId());
                 receivable.setTotalAmount(receivableDTO.getAmount());
                 receivable.setCompetenceDate(receivableDTO.getCompetenceDate());
+                receivable.setCardCompetenceDate(receivableDTO.getCompetenceDate());
                 receivable.setStatus(Constants.TransactionStatus.fromValue(receivableDTO.getStatus()));
                 receivable.setTransaction(transaction);
                 receivable.setMetadata(receivableDTO.getMetadata());
