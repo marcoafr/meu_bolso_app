@@ -56,7 +56,7 @@ const RegisterTransaction = () => {
   };
 
   const validateFilters = () => {
-    if (type == null || (type != 'despesa' && 'receita')) {
+    if (type == null || (type != 'despesa' && type != 'receita')) {
       showSnackbar("Tipo de transação é obrigatório (Despesa ou Receita)", "warning");
       return false
     }

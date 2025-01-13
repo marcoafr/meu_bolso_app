@@ -2,7 +2,7 @@ import axiosInstance from "./axiosConfig";
 
 const receivableService = {
   // Função para buscar contas bancárias por userId
-  getAnalyticalListReceivableByUserId: async (receivablesDTO: string) => {
+  getAnalyticalListReceivableByUserId: async (receivablesDTO) => {
     try {
       const response = await axiosInstance.post('/receivables/searchAnalytical', receivablesDTO);  // Fazendo a requisição POST com userId no corpo
       return response.data;  // Retorna os dados das contas bancárias
@@ -20,6 +20,36 @@ const receivableService = {
       throw error;  // Lança o erro para ser tratado no componente
     }
   },
+
+  // Função para editar transação
+  updateReceivable: async (editionDto) => {
+    try {
+      const response = await axiosInstance.post('/receivables/updateReceivable', editionDto);  // Fazendo a requisição POST com userId no corpo
+      return response.data;  // Retorna os dados das contas bancárias
+    } catch (error) {
+      throw error;  // Lança o erro para ser tratado no componente
+    }
+  },
+
+  // Função para cancelar transação
+  cancelReceivable: async (id) => {
+    try {
+      const response = await axiosInstance.post('/receivables/cancelReceivable', id);  // Fazendo a requisição DELETE com userId no corpo
+      return response.data;  // Retorna os dados das contas bancárias
+    } catch (error) {
+      throw error;  // Lança o erro para ser tratado no componente
+    }
+  },
+
+  // Função para deletar transação
+  deleteReceivable: async (id) => {
+    try {
+      const response = await axiosInstance.post('/receivables/deleteReceivable', id);  // Fazendo a requisição DELETE com userId no corpo
+      return response.data;  // Retorna os dados das contas bancárias
+    } catch (error) {
+      throw error;  // Lança o erro para ser tratado no componente
+    }
+  }
 };
 
 export { receivableService };

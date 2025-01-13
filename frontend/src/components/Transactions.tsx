@@ -33,7 +33,7 @@ const Transactions = () => {
   });
 
   const [transactions, setTransactions] = useState<any[]>([]); // Armazena as transações
-  const [sortOption, setSortOption] = useState<string>("data"); // Estado para armazenar a opção de classificação
+  const [sortOption, setSortOption] = useState<string>("dataC"); // Estado para armazenar a opção de classificação
   const [loading, setLoading] = useState<boolean>(false); // Estado para controle de loading
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null); // Estado para controle do Menu
 
@@ -48,6 +48,55 @@ const Transactions = () => {
   const [editData, setEditData] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dialogMessages, setDialogMessages] = useState<string[]>([]);
+
+  // Modal Cancelar ou Deletar
+  const [openCancelDialog, setOpenCancelDialog] = useState(false); // Estado para controlar o dialog de cancelamento
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false); // Estado para controlar o dialog de deleção
+  const [selectedTransactionCancelDelete, setSelectedTransactionCancelDelete] = useState<any>(null); // Armazena o ID da transação selecionada para cancelar ou deletar
+  
+  // Função que será chamada ao clicar em "Cancelar"
+  const handleCancel = (recei) => {
+    setSelectedTransactionCancelDelete(recei); // Armazena o ID da transação a ser cancelada
+    setOpenCancelDialog(true); // Abre o diálogo de cancelamento
+  };
+  
+  // Função que será chamada ao clicar em "Deletar"
+  const handleDelete = (recei) => {
+    setSelectedTransactionCancelDelete(recei); // Armazena o ID da transação a ser deletada
+    setOpenDeleteDialog(true); // Abre o diálogo de deleção
+  };
+  
+  // Confirmar o cancelamento
+  const confirmCancel = () => {
+    receivableService
+      .cancelReceivable(selectedTransactionCancelDelete!.id) // Chama a função de cancelamento
+      .then(() => {
+        showSnackbar("Transação cancelada com sucesso!", "success");
+        setOpenCancelDialog(false); // Fecha o dialog de cancelamento
+        handleSearch(); // Atualiza a lista de transações
+      }).catch(() => {
+        showSnackbar("Erro ao cancelar transação", "error");
+      });
+  };
+  
+  // Confirmar a deleção
+  const confirmDelete = () => {
+    receivableService
+      .deleteReceivable(selectedTransactionCancelDelete!.id) // Chama a função de cancelamento
+      .then(() => {
+        showSnackbar("Transação deletada com sucesso!", "success");
+        setOpenDeleteDialog(false); // Fecha o dialog de cancelamento
+        handleSearch(); // Atualiza a lista de transações
+      }).catch(() => {
+        showSnackbar("Erro ao deletar transação", "error");
+      });
+  };
+  
+  // Fechar o dialog de cancelamento ou deleção
+  const closeDialogCancelDelete = () => {
+    setOpenCancelDialog(false);
+    setOpenDeleteDialog(false);
+  };
 
   const handleFilterChange = (key: keyof typeof filters, value: any) => {
     setFilters((prev) => ({
@@ -66,7 +115,23 @@ const Transactions = () => {
           (a: any, b: any) =>
             new Date(b.competenceDate).getTime() - new Date(a.competenceDate).getTime()
         );
-        setTransactions(sortedData); // Salva as transações no estado
+
+        // Percorrer os resultados e verificar se o .metadata não é null ou vazio
+        const processedData = sortedData.map((item: any) => {
+          if (item.metadata) {
+            try {
+              // Converter o .metadata de string JSON para objeto
+              item.metadata = JSON.parse(item.metadata);
+            } catch (error) {
+              console.error('Erro ao parsear o metadata:', error);
+              // Caso o JSON esteja malformado, você pode definir item.metadata como um objeto vazio ou deixá-lo como está
+              item.metadata = {};
+            }
+          }
+          return item;
+        });
+
+        setTransactions(processedData); // Salva as transações no estado
       })
       .catch(() => {
         showSnackbar("Erro ao buscar transações", "error");
@@ -83,28 +148,41 @@ const Transactions = () => {
   const handleMenuClose = (value: string) => {
     setSortOption(value); // Atualiza a opção de classificação
     setAnchorEl(null); // Fecha o menu
-    handleSort(); // Chama a função de ordenação
+    handleSort(value); // Chama a função de ordenação
   };
 
-  const handleSort = () => {
+  const handleSort = (sortOption: string) => {
     let sortedData = [...transactions];
 
     switch (sortOption) {
-      case "data":
-        sortedData.sort((a: any, b: any) =>
-          new Date(a.competenceDate).getTime() - new Date(b.competenceDate).getTime()
-        );
-        break;
-      case "valor":
-        sortedData.sort((a: any, b: any) => a.amount - b.amount);
-        break;
-      case "categoria":
-        sortedData.sort((a: any, b: any) =>
-          a.transactionDTO.categoryName.localeCompare(b.transactionDTO.categoryName)
-        );
-        break;
-      default:
-        break;
+        case "dataC": // Ordenar por data crescente
+            sortedData.sort((a: any, b: any) =>
+                new Date(a.competenceDate).getTime() - new Date(b.competenceDate).getTime()
+            );
+            break;
+        case "dataD": // Ordenar por data decrescente
+            sortedData.sort((a: any, b: any) =>
+                new Date(b.competenceDate).getTime() - new Date(a.competenceDate).getTime()
+            );
+            break;
+        case "valorC": // Ordenar por valor crescente
+            sortedData.sort((a: any, b: any) => a.amount - b.amount);
+            break;
+        case "valorD": // Ordenar por valor decrescente
+            sortedData.sort((a: any, b: any) => b.amount - a.amount);
+            break;
+        case "categoriaC": // Ordenar por categoria crescente
+            sortedData.sort((a: any, b: any) =>
+                a.transactionDTO.categoryName.localeCompare(b.transactionDTO.categoryName)
+            );
+            break;
+        case "categoriaD": // Ordenar por categoria decrescente
+            sortedData.sort((a: any, b: any) =>
+                b.transactionDTO.categoryName.localeCompare(a.transactionDTO.categoryName)
+            );
+            break;
+        default:
+            break;
     }
 
     setTransactions(sortedData); // Atualiza a lista de transações
@@ -197,9 +275,10 @@ const Transactions = () => {
   // Função para confirmar a alteração
   const confirmEdit = () => {
     receivableService
-      .updateTransaction(editData.id, {
+      .updateReceivable({
+        receivableId: editData.id, 
         amount: editData.updatedAmount,
-        categoryId: editData.updatedCategory,
+        categoryId: editData.updatedCategory.id,
         competenceDate: editData.updatedCompetenceDate,
       })
       .then(() => {
@@ -217,12 +296,8 @@ const Transactions = () => {
     setOpenEditModal(false);
   };
 
-  const handleCancel = (id: number) => {
-    console.log("Cancelar", id);
-  };
-
-  const handleDelete = (id: number) => {
-    console.log("Deletar", id);
+  const isInstallment = (transaction: any): boolean => {
+    return transaction !== null && transaction.metadata !== null && transaction.metadata.hasOwnProperty('installment') && transaction.metadata.hasOwnProperty('total_installments');
   };
 
   return (
@@ -291,16 +366,27 @@ const Transactions = () => {
               style={{ marginLeft: "10px" }}
               disabled={loading || transactions.length === 0}
             >
-              Classificar por: {sortOption === "data" ? "Data" : sortOption === "valor" ? "Valor" : "Categoria"}
+              Classificar por: 
+              {
+                sortOption === "dataC" ? "Data (C.)" : 
+                sortOption === "dataD" ? "Data (D.)" : 
+                sortOption === "valorC" ? "Valor (C.)" : 
+                sortOption === "valorD" ? "Valor (D.)" : 
+                sortOption === "categoriaC" ? "Categoria (C.)" : 
+                "Categoria (D.)"
+              }
             </Button>
             <Menu
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
               onClose={() => setAnchorEl(null)}
             >
-              <MenuItem onClick={() => handleMenuClose("data")}>Data</MenuItem>
-              <MenuItem onClick={() => handleMenuClose("valor")}>Valor</MenuItem>
-              <MenuItem onClick={() => handleMenuClose("categoria")}>Categoria</MenuItem>
+              <MenuItem onClick={() => handleMenuClose("dataC")}>Data Crescente</MenuItem>
+              <MenuItem onClick={() => handleMenuClose("dataD")}>Data Decrescente</MenuItem>
+              <MenuItem onClick={() => handleMenuClose("valorC")}>Valor Crescente</MenuItem>
+              <MenuItem onClick={() => handleMenuClose("valorD")}>Valor Decrescente</MenuItem>
+              <MenuItem onClick={() => handleMenuClose("categoriaC")}>Categoria Crescente</MenuItem>
+              <MenuItem onClick={() => handleMenuClose("categoriaD")}>Categoria Decrescente</MenuItem>
             </Menu>
           </Grid>
         </Grid>
@@ -333,6 +419,7 @@ const Transactions = () => {
                   <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Typography variant="body1" color="textSecondary" sx={{fontWeight: 'bold'}}>
                       Valor: {formatCurrency(r.amount)}
+                      {isInstallment(r) && ` (Parcela ${r.metadata.installment}/${r.metadata.total_installments})`}
                     </Typography>
                     <Typography variant="body1" textAlign="right">Categoria: {r.transactionDTO.categoryName}</Typography>
                   </Box>
@@ -343,7 +430,7 @@ const Transactions = () => {
                     <Box display="flex" justifyContent="flex-end">
                       {r.status === 3 || r.status === 1 ? (
                         <Tooltip title="Deletar">
-                          <IconButton onClick={() => handleDelete(r.id)} color="error">
+                          <IconButton onClick={() => handleDelete(r)} color="error">
                             <Delete />
                           </IconButton>
                         </Tooltip>
@@ -360,7 +447,7 @@ const Transactions = () => {
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Cancelar">
-                            <IconButton onClick={() => handleCancel(r.id)} color="error">
+                            <IconButton onClick={() => handleCancel(r)} color="error">
                               <Clear />
                             </IconButton>
                           </Tooltip>
@@ -483,6 +570,64 @@ const Transactions = () => {
             Cancelar
           </Button>
           <Button onClick={confirmEdit} color="primary" autoFocus>
+            Confirmar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog de Cancelamento */}
+      <Dialog
+        open={openCancelDialog}
+        onClose={closeDialogCancelDelete}
+        aria-labelledby="cancel-dialog-title"
+        aria-describedby="cancel-dialog-description"
+      >
+        <DialogTitle id="cancel-dialog-title">Confirmar Cancelamento</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="cancel-dialog-description">
+            Você tem certeza de que deseja cancelar esta transação?
+            {isInstallment(selectedTransactionCancelDelete) &&
+              <div>
+                <br />
+                <strong>Atenção:</strong> Esta transação é parcelada. O cancelamento desta parcela irá cancelar todas as outras parcelas associadas.
+              </div>
+            }
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDialogCancelDelete} color="secondary">
+            Cancelar
+          </Button>
+          <Button onClick={confirmCancel} color="primary" autoFocus>
+            Confirmar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog de Deleção */}
+      <Dialog
+        open={openDeleteDialog}
+        onClose={closeDialogCancelDelete}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">Confirmar Deleção</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            Você tem certeza de que deseja deletar esta transação?
+            {isInstallment(selectedTransactionCancelDelete) &&
+              <div>
+                <br />
+                <strong>Atenção:</strong> Esta transação é parcelada. A deleção desta parcela irá deletar todas as outras parcelas associadas.
+              </div>
+            }
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDialogCancelDelete} color="secondary">
+            Cancelar
+          </Button>
+          <Button onClick={confirmDelete} color="primary" autoFocus>
             Confirmar
           </Button>
         </DialogActions>

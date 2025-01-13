@@ -11,8 +11,9 @@ public class ReceivableDTO {
     private Long bankId;
     private String bankName;
     private TransactionDTO transactionDTO;
+    private String metadata;  // Novo campo metadata
 
-    public ReceivableDTO(Long id, BigDecimal amount, LocalDate competenceDate, Integer status, Long bankId ,String bankName, TransactionDTO transactionDTO) {
+    public ReceivableDTO(Long id, BigDecimal amount, LocalDate competenceDate, Integer status, Long bankId ,String bankName, TransactionDTO transactionDTO, String metadata) {
         this.id = id;
         this.amount = amount;
         this.competenceDate = competenceDate;
@@ -20,6 +21,7 @@ public class ReceivableDTO {
         this.bankId = bankId;
         this.bankName = bankName;
         this.transactionDTO = transactionDTO;
+        this.metadata = metadata;
     }
 
     // Getters e Setters
@@ -71,12 +73,20 @@ public class ReceivableDTO {
     public void setBankName(String bankName) {
         this.bankName = bankName;
     }
-
+    
     public TransactionDTO getTransactionDTO() {
         return transactionDTO;
     }
-
+    
     public void setTransactionDTO(TransactionDTO transactionDTO) {
         this.transactionDTO = transactionDTO;
+    }
+    
+    public String getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(String metadata) {
+        this.metadata = metadata;
     }
 }

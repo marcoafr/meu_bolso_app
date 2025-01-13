@@ -62,7 +62,7 @@ public class TransactionController {
                 receivable.setCompetenceDate(receivableDTO.getCompetenceDate());
                 receivable.setStatus(Constants.TransactionStatus.fromValue(receivableDTO.getStatus()));
                 receivable.setTransaction(transaction);
-                receivable.setMetadata("{}");
+                receivable.setMetadata(receivableDTO.getMetadata());
 
                 if (receivableDTO.getBankId() != null && receivableDTO.getBankId() > 0) {
                     receivable.setBankAccount(new BankAccount());

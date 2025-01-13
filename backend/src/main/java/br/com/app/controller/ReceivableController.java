@@ -7,6 +7,7 @@ import br.com.app.dto.LiquidationRequestDTO;
 import br.com.app.dto.ReceivableDTO;
 import br.com.app.dto.ReceivablesRequest;
 import br.com.app.dto.TransactionDTO;
+import br.com.app.dto.UpdateReceivableDTO;
 import br.com.app.exception.ResourceNotFoundException;
 import br.com.app.model.BankAccount;
 import br.com.app.model.Category;
@@ -16,9 +17,11 @@ import br.com.app.repository.ReceivableRepository;
 import br.com.app.repository.TransactionRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -80,7 +83,8 @@ public class ReceivableController {
                         receivable.getStatus().getValue(),
                         (receivable.getBankAccount() != null && receivable.getBankAccount().getId() != null && receivable.getBankAccount().getId() > 0) ?receivable.getBankAccount().getId() : null,
                         (receivable.getBankAccount() != null && receivable.getBankAccount().getName() != null && !receivable.getBankAccount().getName().isEmpty()) ? receivable.getBankAccount().getName() : null,
-                        transactionDTO
+                        transactionDTO,
+                        receivable.getMetadata()
                 );
             })
             .collect(Collectors.toList());
@@ -139,7 +143,126 @@ public class ReceivableController {
             receivable.getStatus().getValue(),
             receivable.getBankAccount().getId(),
             receivable.getBankAccount().getName(),
-            null
+            null,
+            receivable.getMetadata()
         );
-    }    
+    }   
+    
+    @PostMapping("/updateReceivable")
+    public ReceivableDTO updateReceivable(@RequestBody UpdateReceivableDTO updateReceivableDTO) {
+        // Buscar o receivable a ser alterado
+        Receivable receivable = receivableRepository.findById(updateReceivableDTO.getReceivableId())
+            .orElseThrow(() -> new ResourceNotFoundException("Receivable not found"));
+
+        // Atualizar as propriedades do receivable
+        Category newCategory = new Category();  // Recuperar ou instanciar a nova categoria
+        newCategory.setId(updateReceivableDTO.getCategoryId());
+        receivable.getTransaction().setCategory(newCategory);
+        receivable.getTransaction().getCategory().setId(updateReceivableDTO.getCategoryId());
+
+        // Verificar se houve alteração no valor
+        BigDecimal oldAmount = receivable.getTotalAmount();  // O valor antigo do receivable
+        BigDecimal newAmount = updateReceivableDTO.getAmount();
+
+        // Se o valor foi alterado, ajustar a transaction associada
+        if (!oldAmount.equals(newAmount)) {
+            // Atualizar a Transaction associada
+            Transaction transaction = receivable.getTransaction();
+            BigDecimal transactionAmountDifference = newAmount.subtract(oldAmount);
+            
+            // Atualizar o valor da transação
+            transaction.setTotalAmount(transaction.getTotalAmount().add(transactionAmountDifference));
+            transactionRepository.save(transaction);
+        }
+
+        // Atualizar o valor e a data de competência do receivable
+        receivable.setTotalAmount(newAmount);
+        receivable.setCompetenceDate(updateReceivableDTO.getCompetenceDate());
+
+        // Salvar as alterações no receivable
+        receivableRepository.save(receivable);
+
+        // Retornar o DTO atualizado do receivable
+        return new ReceivableDTO(
+            receivable.getId(),
+            receivable.getTotalAmount(),
+            receivable.getCompetenceDate(),
+            receivable.getStatus().getValue(),
+            receivable.getBankAccount() != null ? receivable.getBankAccount().getId() : null,
+            receivable.getBankAccount() != null ? receivable.getBankAccount().getName() : null,
+            null,
+            receivable.getMetadata()
+        );
+    }
+
+    @PostMapping("/cancelReceivable")
+    public ResponseEntity<String> cancelReceivable(@RequestBody Long receivableId) {
+        // Buscar o receivable a ser cancelado
+        Receivable receivable = receivableRepository.findById(receivableId)
+            .orElseThrow(() -> new ResourceNotFoundException("Receivable not found"));
+
+        // Verificar se o receivable está em estado pendente
+        if (receivable.getStatus() != Constants.TransactionStatus.PENDING) {
+            throw new IllegalStateException("Receivable is not in a cancelable state.");
+        }
+
+        // Buscar os outros receivables associados à mesma transação
+        List<Receivable> relatedReceivables = receivableRepository.findByTransactionId(receivable.getTransaction().getId());
+
+        // Verificar se algum outro receivable já foi pago
+        boolean hasPaidReceivable = relatedReceivables.stream()
+            .anyMatch(r -> r.getStatus() == Constants.TransactionStatus.PAID);
+
+        if (hasPaidReceivable) {
+            throw new IllegalStateException("Cannot cancel the receivable because another related receivable is already paid.");
+        }
+
+        // Cancelar todos os receivables pendentes
+        for (Receivable relatedReceivable : relatedReceivables) {
+            if (relatedReceivable.getStatus() == Constants.TransactionStatus.PENDING) {
+                relatedReceivable.setStatus(Constants.TransactionStatus.CANCELED);
+                receivableRepository.save(relatedReceivable);
+            }
+        }
+
+        // Cancelar o receivable atual
+        receivable.setStatus(Constants.TransactionStatus.CANCELED);
+        receivableRepository.save(receivable);
+
+        // Retornar resposta positiva com status HTTP 200 OK
+        return ResponseEntity.ok("Transação cancelada com sucesso!");
+    }
+
+    @PostMapping("/deleteReceivable")
+    public ResponseEntity<String> deleteReceivable(@RequestBody Long receivableId) {
+        // Buscar o receivable a ser deletado
+        Receivable receivable = receivableRepository.findById(receivableId)
+            .orElseThrow(() -> new ResourceNotFoundException("Receivable not found"));
+
+        // Verificar se o status do receivable é CANCELED ou PAID
+        if (receivable.getStatus() != Constants.TransactionStatus.CANCELED &&
+            receivable.getStatus() != Constants.TransactionStatus.PAID) {
+            throw new IllegalStateException("Receivable is not in a deletable state.");
+        }
+
+        // Buscar os outros receivables associados à mesma transação
+        List<Receivable> relatedReceivables = receivableRepository.findByTransactionId(receivable.getTransaction().getId());
+
+        // Verificar se todos os receivables estão em estado CANCELED ou PAID
+        for (Receivable relatedReceivable : relatedReceivables) {
+            if (relatedReceivable.getStatus() != Constants.TransactionStatus.CANCELED &&
+                relatedReceivable.getStatus() != Constants.TransactionStatus.PAID) {
+                throw new IllegalStateException("Cannot delete because there are receivables in an invalid state.");
+            }
+        }
+
+        // Alterar o status de todos os receivables relacionados para DELETED
+        for (Receivable relatedReceivable : relatedReceivables) {
+            relatedReceivable.setStatus(Constants.TransactionStatus.DELETED);
+            receivableRepository.save(relatedReceivable);
+        }
+
+        // Retornar resposta positiva com status HTTP 200 OK
+        return ResponseEntity.ok("Transação deletada com sucesso!");
+    }
 }

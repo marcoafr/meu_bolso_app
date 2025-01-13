@@ -107,7 +107,8 @@ public class CreateTransactionController {
                         (receivable.getBankAccount() != null && receivable.getBankAccount().getName() != null && !receivable.getBankAccount().getName().isEmpty()) 
                             ? receivable.getBankAccount().getName() 
                             : null,
-                        null
+                        null,
+                        receivable.getMetadata()
                 ))
                 .collect(Collectors.toList());
 
@@ -160,6 +161,13 @@ public class CreateTransactionController {
             receivable.setCompetenceDate(competenceDate);
             receivable.setTransaction(transaction);
             receivable.setStatus(Constants.TransactionStatus.PENDING); // Status inicial padrão
+            
+            // Construir o JSON para o campo metadata
+            String metadata = String.format("{\"installment\": \"%d\", \"total_installments\": \"%d\"}", 
+                i + 1, dto.getInstallments());
+
+            // Definir o campo metadata
+            receivable.setMetadata(metadata);
 
             if (dto.getBank() != null && dto.getBank() > 0) {
                 receivable.setBankAccount(new BankAccount());
@@ -202,6 +210,7 @@ public class CreateTransactionController {
             receivable.setCompetenceDate(issueDate);
             receivable.setTransaction(transaction);
             receivable.setStatus(Constants.TransactionStatus.PENDING); // Status inicial padrão
+            receivable.setMetadata("{}");
 
             if (dto.getBank() != null && dto.getBank() > 0) {
                 receivable.setBankAccount(new BankAccount());
@@ -240,6 +249,7 @@ public class CreateTransactionController {
         receivable.setCompetenceDate(dto.getDate());
         receivable.setTransaction(transaction);
         receivable.setStatus(Constants.TransactionStatus.PENDING); // Status inicial padrão
+        receivable.setMetadata("{}");
 
         if (dto.getBank() != null && dto.getBank() > 0) {
             receivable.setBankAccount(new BankAccount());

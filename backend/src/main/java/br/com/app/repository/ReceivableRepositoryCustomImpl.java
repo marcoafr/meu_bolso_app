@@ -82,6 +82,9 @@ public class ReceivableRepositoryCustomImpl implements ReceivableRepositoryCusto
             }
         }
 
+        // Adicionando filtro para garantir que o status não seja DELETED
+        predicates[index++] = cb.notEqual(receivable.get("status"), Constants.TransactionStatus.DELETED.ordinal());
+
         // Filtrando por transactionType (relacionado com category)
         if (request.getTransactionType() != null) {
             predicates[index++] = cb.equal(category.get("type"), request.getTransactionType());
