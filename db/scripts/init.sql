@@ -118,7 +118,7 @@ INSERT INTO bank_accounts (name, color, initial_amount, user_id)
 VALUES ('Caixa', '#1D33AD', 520.23, currval(pg_get_serial_sequence('users', 'id')));
 
 INSERT INTO bank_accounts (name, color, initial_amount, user_id)
-VALUES ('Santander', '#DE1D1D', 0.49, currval(pg_get_serial_sequence('users', 'id')));
+VALUES ('Santander', '#DE1D1D', 70.49, currval(pg_get_serial_sequence('users', 'id')));
 
 -- Inserir cartão de crédito inicial
 INSERT INTO credit_cards (name, color, closing_day, paying_day, user_id)
@@ -129,8 +129,8 @@ INSERT INTO transactions (total_amount, issue_date, category_id, user_id, credit
 VALUES (200, '2024-12-01', currval(pg_get_serial_sequence('categories', 'id')), currval(pg_get_serial_sequence('users', 'id')), currval(pg_get_serial_sequence('credit_cards', 'id')), 0);
 
 -- Inserir receivables
-INSERT INTO receivables (total_amount, status, transaction_id, competence_date, card_competence_date, bank_account_id, user_id, metadata)
-VALUES (66.67, 1, currval(pg_get_serial_sequence('transactions', 'id')), '2024-12-01', '2024-12-01', currval(pg_get_serial_sequence('bank_accounts', 'id')), currval(pg_get_serial_sequence('users', 'id')), '{"installment": 1, "total_installments": 3}');
+INSERT INTO receivables (total_amount, paid_amount, status, transaction_id, competence_date, card_competence_date, bank_account_id, user_id, metadata)
+VALUES (66.67, 66.67, 1, currval(pg_get_serial_sequence('transactions', 'id')), '2024-12-01', '2024-12-01', currval(pg_get_serial_sequence('bank_accounts', 'id')), currval(pg_get_serial_sequence('users', 'id')), '{"installment": 1, "total_installments": 3}');
 INSERT INTO receivables (total_amount, status, transaction_id, competence_date, card_competence_date, user_id, metadata)
 VALUES (66.66, 0, currval(pg_get_serial_sequence('transactions', 'id')), '2025-01-01', '2025-01-01', currval(pg_get_serial_sequence('users', 'id')), '{"installment": 2, "total_installments": 3}');
 INSERT INTO receivables (total_amount, status, transaction_id, competence_date, card_competence_date, user_id, metadata)

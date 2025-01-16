@@ -1,5 +1,6 @@
 package br.com.app.repository;
 
+import br.com.app.Constants;
 import br.com.app.model.Receivable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -16,4 +17,6 @@ public interface ReceivableRepository extends JpaRepository<Receivable, Long>, R
     List<Receivable> findByUserId(Long userId);
 
     List<Receivable> findByTransactionId(Long transactionId);
+
+    List<Receivable> findByBankAccountIdAndStatus(Long bankAccountId, Constants.TransactionStatus status);
 }
