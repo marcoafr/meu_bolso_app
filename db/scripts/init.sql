@@ -124,7 +124,7 @@ VALUES ('Santander', '#DE1D1D', 70.49, currval(pg_get_serial_sequence('users', '
 INSERT INTO credit_cards (name, color, closing_day, paying_day, user_id)
 VALUES ('C6 Bank', '#A8A2AB', 24, 1, currval(pg_get_serial_sequence('users', 'id')));
 
--- Inserir transação única
+-- Inserir transação parcelada cartão
 INSERT INTO transactions (total_amount, description, issue_date, category_id, user_id, credit_card_id, status)
 VALUES (200, 'Compras CenterBox', '2024-12-01', currval(pg_get_serial_sequence('categories', 'id')), currval(pg_get_serial_sequence('users', 'id')), currval(pg_get_serial_sequence('credit_cards', 'id')), 0);
 
@@ -135,3 +135,31 @@ INSERT INTO receivables (total_amount, status, transaction_id, competence_date, 
 VALUES (66.66, 0, currval(pg_get_serial_sequence('transactions', 'id')), '2025-01-01', '2025-01-01', currval(pg_get_serial_sequence('users', 'id')), '{"installment": 2, "total_installments": 3}');
 INSERT INTO receivables (total_amount, status, transaction_id, competence_date, card_competence_date, user_id, metadata)
 VALUES (66.66, 0, currval(pg_get_serial_sequence('transactions', 'id')), '2025-02-01', '2025-02-01', currval(pg_get_serial_sequence('users', 'id')), '{"installment": 3, "total_installments": 3}');
+
+-- Inserir outra categoria e orçamento
+INSERT INTO categories (name, type, user_id)
+VALUES ('Hobby', 1, currval(pg_get_serial_sequence('users', 'id')));
+INSERT INTO category_budgets (amount, category_id, user_id)
+VALUES (300, currval(pg_get_serial_sequence('categories', 'id')), currval(pg_get_serial_sequence('users', 'id')));
+
+-- Inserir transação única cartão
+INSERT INTO transactions (total_amount, description, issue_date, category_id, user_id, credit_card_id, status)
+VALUES (120, 'Ingresso partida futebol', '2025-01-10', currval(pg_get_serial_sequence('categories', 'id')), currval(pg_get_serial_sequence('users', 'id')), currval(pg_get_serial_sequence('credit_cards', 'id')), 0);
+
+-- Inserir receivables
+INSERT INTO receivables (total_amount, status, transaction_id, competence_date, card_competence_date, user_id, metadata)
+VALUES (120, 0, currval(pg_get_serial_sequence('transactions', 'id')), '2025-01-10', '2025-01-10', currval(pg_get_serial_sequence('users', 'id')), '{}');
+
+-- Inserir outra categoria e orçamento
+INSERT INTO categories (name, type, user_id)
+VALUES ('Educação', 1, currval(pg_get_serial_sequence('users', 'id')));
+INSERT INTO category_budgets (amount, category_id, user_id)
+VALUES (650, currval(pg_get_serial_sequence('categories', 'id')), currval(pg_get_serial_sequence('users', 'id')));
+
+-- Inserir transação única banco
+INSERT INTO transactions (total_amount, description, issue_date, category_id, user_id, credit_card_id, status)
+VALUES (700, 'Curso online', '2025-01-15', currval(pg_get_serial_sequence('categories', 'id')), currval(pg_get_serial_sequence('users', 'id')), currval(pg_get_serial_sequence('credit_cards', 'id')), 0);
+
+-- Inserir receivables
+INSERT INTO receivables (total_amount, paid_amount, status, transaction_id, competence_date, card_competence_date, user_id, metadata)
+VALUES (700, 700, 1, currval(pg_get_serial_sequence('transactions', 'id')), '2025-01-15', '2025-01-15', currval(pg_get_serial_sequence('users', 'id')), '{}');

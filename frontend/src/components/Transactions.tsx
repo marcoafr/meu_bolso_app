@@ -466,7 +466,7 @@ const Transactions = () => {
       <Modal open={openModalLiquidation} onClose={handleModalCloseLiquidation}>
         <Box sx={{
           position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", 
-          bgcolor: "background.paper", padding: 4, borderRadius: 2, boxShadow: 3
+          bgcolor: "background.paper", padding: 4, borderRadius: 2, boxShadow: 3, maxWidth:"80%"
         }}>
           <Typography variant="h6" gutterBottom>Liquidar Transação</Typography>
 
@@ -497,7 +497,7 @@ const Transactions = () => {
 
       {/* Modal de Edição */}
       <Modal open={openEditModal} onClose={handleEditClose}>
-        <Box sx={{ width: 400, padding: 4, margin: "auto", mt: 10, backgroundColor: "white", borderRadius: 2 }}>
+        <Box sx={{ width: 400, padding: 4, margin: "auto", mt: 10, backgroundColor: "white", borderRadius: 2, maxWidth:"80%"}}>
           <Typography variant="h6" gutterBottom>
             Editar Transação
           </Typography>

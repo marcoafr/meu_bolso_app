@@ -66,22 +66,24 @@ const Dashboard = () => {
       return; // Não faz a consulta se selectedCard for null ou 0
     }
   
-    creditCardService.summarizedInfo({
-        creditCardId: selectedCard!,
-        month: selectedMonthYear.month,
-        year: selectedMonthYear.year,
-        userId: user?.id!,
-      }).then((data) => {
-        if (data.length > 0) {
-          data.forEach((r) => {
-            r.competenceDate = r.competenceDate ? formatDate(r.competenceDate) : "";
-            r.metadata = r.metadata ? JSON.parse(r.metadata) : {};
-          });
-        }
-        setSummarizedInfo(data); // Armazena os dados recebidos
-      }).catch((error) => {
-        console.error("Erro ao buscar informações da fatura:", error);
-      });
+    if (selectedCard && selectedCard > 0 && selectedMonthYear.month && selectedMonthYear.year) {
+      creditCardService.summarizedInfo({
+          creditCardId: selectedCard!,
+          month: selectedMonthYear.month,
+          year: selectedMonthYear.year,
+          userId: user?.id!,
+        }).then((data) => {
+          if (data.length > 0) {
+            data.forEach((r) => {
+              r.competenceDate = r.competenceDate ? formatDate(r.competenceDate) : "";
+              r.metadata = r.metadata ? JSON.parse(r.metadata) : {};
+            });
+          }
+          setSummarizedInfo(data); // Armazena os dados recebidos
+        }).catch((error) => {
+          console.error("Erro ao buscar informações da fatura:", error);
+        });
+    }
   }, [selectedCard, selectedMonthYear, user]);
 
   // Effect to monitor changes in expense filters
@@ -193,51 +195,95 @@ const Dashboard = () => {
               </FormControl>
             </Box>
 
-            {/* Table Below Filters */}
-            {summarizedInfo.length > 0 && (
-              <TableContainer component={Paper} sx={{ marginTop: 2 }}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Data</TableCell>
-                      <TableCell>Descrição</TableCell>
-                      <TableCell>Categoria</TableCell>
-                      <TableCell>Valor</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell>OBS</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {summarizedInfo.map((r, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{r.competenceDate}</TableCell>
-                        <TableCell>{r.transactionDTO.description}</TableCell>
-                        <TableCell>{r.transactionDTO.categoryDTO.name}</TableCell>
-                        <TableCell>{formatCurrency(r.amount)}</TableCell>
-                        <TableCell>
-                          {r.status === 0
-                            ? "Pendente"
-                            : r.status === 1
-                            ? "Pago"
-                            : r.status === 3
-                            ? "Pendente"
-                            : r.status === 4
-                            ? "Deletado"
-                            : "Desconhecido"}
-                        </TableCell>
-                        <TableCell>
-                          {r.metadata &&
-                            r.metadata.installment &&
-                            r.metadata.total_installments
-                            ? `Parcela ${r.metadata.installment} / ${r.metadata.total_installments}`
-                            : ""}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+            {/* Tabela transformada em uma lista para mobile */}
+            {summarizedInfo.length > 0 ? (
+              <Box sx={{ marginTop: 2 }}>
+                {summarizedInfo.map((r, index) => (
+                  <Card key={index} sx={{ backgroundColor: "#fff", marginBottom: 2, padding: 2, borderRadius: 2 }}>
+                    <CardContent>
+                      <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                        {r.transactionDTO.description}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Categoria:</strong> {r.transactionDTO.categoryDTO.name}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Data:</strong> {r.competenceDate}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Valor:</strong> {formatCurrency(r.amount)}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Status:</strong> {r.status === 0
+                          ? "Pendente"
+                          : r.status === 1
+                          ? "Pago"
+                          : r.status === 3
+                          ? "Pendente"
+                          : r.status === 4
+                          ? "Deletado"
+                          : "Desconhecido"}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Observação:</strong> {r.metadata && r.metadata.installment && r.metadata.total_installments
+                          ? `Parcela ${r.metadata.installment} / ${r.metadata.total_installments}`
+                          : ""}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Box>
+            ) : (
+              <Typography>Nenhuma transação encontrada para o filtro selecionado.</Typography> 
             )}
+            {
+              /*
+                {summarizedInfo.length > 0 && (
+                  <TableContainer component={Paper} sx={{ marginTop: 2 }}>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Data</TableCell>
+                          <TableCell>Descrição</TableCell>
+                          <TableCell>Categoria</TableCell>
+                          <TableCell>Valor</TableCell>
+                          <TableCell>Status</TableCell>
+                          <TableCell>OBS</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {summarizedInfo.map((r, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{r.competenceDate}</TableCell>
+                            <TableCell>{r.transactionDTO.description}</TableCell>
+                            <TableCell>{r.transactionDTO.categoryDTO.name}</TableCell>
+                            <TableCell>{formatCurrency(r.amount)}</TableCell>
+                            <TableCell>
+                              {r.status === 0
+                                ? "Pendente"
+                                : r.status === 1
+                                ? "Pago"
+                                : r.status === 3
+                                ? "Pendente"
+                                : r.status === 4
+                                ? "Deletado"
+                                : "Desconhecido"}
+                            </TableCell>
+                            <TableCell>
+                              {r.metadata &&
+                                r.metadata.installment &&
+                                r.metadata.total_installments
+                                ? `Parcela ${r.metadata.installment} / ${r.metadata.total_installments}`
+                                : ""}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                )}
+              */
+            }
           </CardContent>
         </Card>
 
@@ -293,42 +339,79 @@ const Dashboard = () => {
 
             {/* Exibição da Tabela com Recebíveis por Categoria */}
             {receivablesByCategory.length > 0 ? (
-              <TableContainer component={Paper} sx={{ marginTop: 2 }}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Categoria</TableCell>
-                      <TableCell>Total Pago</TableCell>
-                      <TableCell>Total Previsto</TableCell>
-                      <TableCell>Total (Pago e Previsto)</TableCell>
-                      <TableCell>Total Orçamento</TableCell>
-                      <TableCell>Diferença</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {receivablesByCategory.map((r, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{r.categoryName}</TableCell>
-                        <TableCell>{formatCurrency(r.totalAmount)}</TableCell>
-                        <TableCell>{formatCurrency(r.totalPaidAmount)}</TableCell>
-                        <TableCell>{formatCurrency(r.totalAmount - r.totalPaidAmount)}</TableCell>
-                        <TableCell>{formatCurrency(r.totalExpected)}</TableCell>
-                        <TableCell
-                          style={{
-                            color: r.totalExpected - r.totalAmount >= 0 ? 'green' : 'red',
-                            fontWeight: 'bold',
-                          }}
-                        >
-                          {formatCurrency(r.totalExpected - r.totalAmount)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+              <Box sx={{ marginTop: 2 }}>
+                {receivablesByCategory.map((r, index) => (
+                  <Card key={index} sx={{ backgroundColor: "#fff", marginBottom: 2, padding: 2, borderRadius: 2 }}>
+                    <CardContent>
+                      <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                        {r.categoryName}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Total Pago:</strong> {formatCurrency(r.totalPaidAmount)}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Total Previsto:</strong> {formatCurrency(r.totalAmount - r.totalPaidAmount)}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Total (Pago e Previsto):</strong> {formatCurrency(r.totalAmount)}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Total Orçamento:</strong> {formatCurrency(r.totalExpected)}
+                      </Typography>
+                      <Typography variant="body2" sx={{
+                        color: r.totalExpected - r.totalAmount >= 0 ? 'green' : 'red',
+                        fontWeight: 'bold',
+                      }}>
+                        <strong>Diferença:</strong> {formatCurrency(r.totalExpected - r.totalAmount)}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Box>
             ) : (
               <Typography>Nenhum recebível encontrado para o período selecionado.</Typography>
             )}
+            {
+              /*
+              {receivablesByCategory.length > 0 ? (
+                <TableContainer component={Paper} sx={{ marginTop: 2 }}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Categoria</TableCell>
+                        <TableCell>Total Pago</TableCell>
+                        <TableCell>Total Previsto</TableCell>
+                        <TableCell>Total (Pago e Previsto)</TableCell>
+                        <TableCell>Total Orçamento</TableCell>
+                        <TableCell>Diferença</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {receivablesByCategory.map((r, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{r.categoryName}</TableCell>
+                          <TableCell>{formatCurrency(r.totalAmount)}</TableCell>
+                          <TableCell>{formatCurrency(r.totalPaidAmount)}</TableCell>
+                          <TableCell>{formatCurrency(r.totalAmount - r.totalPaidAmount)}</TableCell>
+                          <TableCell>{formatCurrency(r.totalExpected)}</TableCell>
+                          <TableCell
+                            style={{
+                              color: r.totalExpected - r.totalAmount >= 0 ? 'green' : 'red',
+                              fontWeight: 'bold',
+                            }}
+                          >
+                            {formatCurrency(r.totalExpected - r.totalAmount)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Typography>Nenhum recebível encontrado para o período selecionado.</Typography>
+              )}
+              */
+            }
           </CardContent>
         </Card>
       </Box>
