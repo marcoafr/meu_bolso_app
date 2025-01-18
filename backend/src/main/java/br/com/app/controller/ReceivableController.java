@@ -4,7 +4,9 @@ import br.com.app.Constants;
 import br.com.app.dto.CategoryDTO;
 import br.com.app.dto.CreditCardDTO;
 import br.com.app.dto.LiquidationRequestDTO;
+import br.com.app.dto.ReceivableByCategoryDTO;
 import br.com.app.dto.ReceivableDTO;
+import br.com.app.dto.ReceivableFilterDTO;
 import br.com.app.dto.ReceivablesRequest;
 import br.com.app.dto.TransactionDTO;
 import br.com.app.dto.UpdateReceivableDTO;
@@ -15,6 +17,7 @@ import br.com.app.model.Receivable;
 import br.com.app.model.Transaction;
 import br.com.app.repository.ReceivableRepository;
 import br.com.app.repository.TransactionRepository;
+import br.com.app.service.ReceivableService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +37,12 @@ public class ReceivableController {
     
     @Autowired
     private TransactionRepository transactionRepository;
+
+    private final ReceivableService receivableService;
+
+    public ReceivableController(ReceivableService receivableService) {
+        this.receivableService = receivableService;
+    }
 
     @PostMapping("/searchAnalytical")
     @Transactional
@@ -79,6 +88,7 @@ public class ReceivableController {
                 return new ReceivableDTO(
                         receivable.getId(),
                         receivable.getTotalAmount(),
+                        receivable.getCompetenceDate(),
                         receivable.getCompetenceDate(),
                         receivable.getStatus().getValue(),
                         (receivable.getBankAccount() != null && receivable.getBankAccount().getId() != null && receivable.getBankAccount().getId() > 0) ?receivable.getBankAccount().getId() : null,
@@ -140,6 +150,7 @@ public class ReceivableController {
             receivable.getId(),
             receivable.getTotalAmount(),
             receivable.getCompetenceDate(),
+            receivable.getCardCompetenceDate(),
             receivable.getStatus().getValue(),
             receivable.getBankAccount().getId(),
             receivable.getBankAccount().getName(),
@@ -187,6 +198,7 @@ public class ReceivableController {
             receivable.getId(),
             receivable.getTotalAmount(),
             receivable.getCompetenceDate(),
+            receivable.getCardCompetenceDate(),
             receivable.getStatus().getValue(),
             receivable.getBankAccount() != null ? receivable.getBankAccount().getId() : null,
             receivable.getBankAccount() != null ? receivable.getBankAccount().getName() : null,
@@ -264,5 +276,10 @@ public class ReceivableController {
 
         // Retornar resposta positiva com status HTTP 200 OK
         return ResponseEntity.ok("Transação deletada com sucesso!");
+    }
+
+    @PostMapping("/receivablesByMonth")
+    public List<ReceivableByCategoryDTO> getReceivablesByMonth(@RequestBody ReceivableFilterDTO filter) {
+        return receivableService.getReceivablesByMonth(filter);
     }
 }

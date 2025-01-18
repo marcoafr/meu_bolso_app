@@ -49,6 +49,16 @@ const receivableService = {
     } catch (error) {
       throw error;  // Lança o erro para ser tratado no componente
     }
+  },
+  
+  // Função para buscar receivables por categoria
+  receivablesByMonth: async (filter) => {
+    try {
+      const response = await axiosInstance.post('/receivables/receivablesByMonth', filter);  
+      return response.data; 
+    } catch (error) {
+      throw error;  // Lança o erro para ser tratado no componente
+    }
   }
 };
 

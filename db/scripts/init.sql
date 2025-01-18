@@ -125,8 +125,8 @@ INSERT INTO credit_cards (name, color, closing_day, paying_day, user_id)
 VALUES ('C6 Bank', '#A8A2AB', 24, 1, currval(pg_get_serial_sequence('users', 'id')));
 
 -- Inserir transação única
-INSERT INTO transactions (total_amount, issue_date, category_id, user_id, credit_card_id, status)
-VALUES (200, '2024-12-01', currval(pg_get_serial_sequence('categories', 'id')), currval(pg_get_serial_sequence('users', 'id')), currval(pg_get_serial_sequence('credit_cards', 'id')), 0);
+INSERT INTO transactions (total_amount, description, issue_date, category_id, user_id, credit_card_id, status)
+VALUES (200, 'Compras CenterBox', '2024-12-01', currval(pg_get_serial_sequence('categories', 'id')), currval(pg_get_serial_sequence('users', 'id')), currval(pg_get_serial_sequence('credit_cards', 'id')), 0);
 
 -- Inserir receivables
 INSERT INTO receivables (total_amount, paid_amount, status, transaction_id, competence_date, card_competence_date, bank_account_id, user_id, metadata)

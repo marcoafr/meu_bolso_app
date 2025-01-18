@@ -7,16 +7,18 @@ public class ReceivableDTO {
     private Long id;
     private BigDecimal amount;
     private LocalDate competenceDate;
+    private LocalDate cardCompetenceDate;
     private Integer status;
     private Long bankId;
     private String bankName;
     private TransactionDTO transactionDTO;
     private String metadata;  // Novo campo metadata
 
-    public ReceivableDTO(Long id, BigDecimal amount, LocalDate competenceDate, Integer status, Long bankId ,String bankName, TransactionDTO transactionDTO, String metadata) {
+    public ReceivableDTO(Long id, BigDecimal amount, LocalDate competenceDate, LocalDate cardCompetenceDate, Integer status, Long bankId ,String bankName, TransactionDTO transactionDTO, String metadata) {
         this.id = id;
         this.amount = amount;
         this.competenceDate = competenceDate;
+        this.cardCompetenceDate = cardCompetenceDate;
         this.status = status;
         this.bankId = bankId;
         this.bankName = bankName;
@@ -48,6 +50,14 @@ public class ReceivableDTO {
 
     public void setCompetenceDate(LocalDate competenceDate) {
         this.competenceDate = competenceDate;
+    }
+
+    public LocalDate getCardCompetenceDate() {
+        return cardCompetenceDate;
+    }
+
+    public void setCardCompetenceDate(LocalDate cardCompetenceDate) {
+        this.cardCompetenceDate = cardCompetenceDate;
     }
 
     public Integer getStatus() {

@@ -29,6 +29,16 @@ const creditCardService = {
     } catch (error) {
       throw error; // Lança o erro para ser tratado no componente
    }
+  },
+  
+  // Função para coletar informações da fatura de um cartão de crédito existente
+  summarizedInfo: async (filter) => {
+    try {
+      const response = await axiosInstance.post('/credit-cards/summarized-info', filter); // Requisição POST para editar
+      return response.data; // Retorna os dados da cartão de crédito atualizada
+    } catch (error) {
+      throw error; // Lança o erro para ser tratado no componente
+   }
   }
 };
 

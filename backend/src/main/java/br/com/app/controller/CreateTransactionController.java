@@ -100,6 +100,7 @@ public class CreateTransactionController {
                         receivable.getId(),
                         receivable.getTotalAmount(),
                         receivable.getCompetenceDate(),
+                        receivable.getCardCompetenceDate(),
                         receivable.getStatus().getValue(),
                         (receivable.getBankAccount() != null && receivable.getBankAccount().getId() != null && receivable.getBankAccount().getId() > 0) 
                             ? receivable.getBankAccount().getId() 
