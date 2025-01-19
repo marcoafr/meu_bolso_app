@@ -15,6 +15,7 @@ public class WebConfig implements WebMvcConfigurer {
                 //.allowedOrigins("http://localhost:5173")  // Permite requisições de localhost:5173
                 .allowedOrigins("http://103.199.186.65:5173")  // Permite requisições de 103.199.186.65:5173
                 .allowedMethods("GET", "POST", "PUT", "DELETE")
-                .allowedHeaders("*");  // Permite qualquer cabeçalho
+                .allowedHeaders("*")  // Permite qualquer cabeçalho
+                .allowCredentials(true); // Permite envio de cookies, tokens, etc.
     }
 }
