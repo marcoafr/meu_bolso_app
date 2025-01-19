@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { CircularProgress } from '@mui/material';
 import MultiAutoCompleteSelect  from './MultiAutoCompleteSelect'; // Supondo que o componente MultiAutoCompleteSelect esteja no caminho correto
 import { bankAccountService } from '../api/bankAccountService'; // Importando o serviço
-import { useAuth } from '../authContext';
+import { useAuth } from '../authenticationContext';
 
 interface BankDirectiveProps {
   multiple?: boolean; // Permitir múltiplas seleções (padrão: true)

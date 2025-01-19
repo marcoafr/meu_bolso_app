@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { categoryService } from '../api/categoryService';
-import { useAuth } from '../authContext';
+import { useAuth } from '../authenticationContext';
 import MultiAutoCompleteEntitySelect from './MultiAutoCompleteEntitySelect';
 
 interface CategoryEntityDirectiveProps {

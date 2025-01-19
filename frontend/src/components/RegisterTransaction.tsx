@@ -17,7 +17,7 @@ import CategoryDirective from '../directives/CategoryDirective';
 import BankDirective from '../directives/BankDirective';
 import { formatCurrency } from '../util/Util';
 import CardDirective from '../directives/CardDirective';
-import { useAuth } from '../authContext';
+import { useAuth } from '../authenticationContext';
 import { createTransactionService } from '../api/createTransactionService';
 import { useSnackbar } from '../directives/snackbar/SnackbarContext';
 import TransactionsReceivablesModal from './TransactionsReceivablesModal';

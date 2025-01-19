@@ -15,7 +15,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { formatCurrency, formatLocalDate } from '../util/Util';
 import { transactionService } from '../api/transactionService';
 import { useSnackbar } from '../directives/snackbar/SnackbarContext';
-import { useAuth } from '../authContext';
+import { useAuth } from '../authenticationContext';
 
 const TransactionsReceivablesModal = ({ openCategoryModal, setOpenCategoryModal, transactions, title }) => {
   const { user } = useAuth(); // Pegando o user do contexto de autenticação

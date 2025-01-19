@@ -1,7 +1,7 @@
 // src/utils/ProtectedRoute.tsx
 
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../authContext';
+import { useAuth } from '../authenticationContext';
 
 const ProtectedRoute = () => {
   const { isAuthenticated } = useAuth();  // Hook para obter o estado de autenticação

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { TextField, Button, Box, Typography, Alert, CircularProgress } from "@mui/material";
 import { login as apiLogin } from "../api/authService";  // Função de login da API
-import { useAuth } from "../authContext";  // Função de login do AuthContext
+import { useAuth } from "../authenticationContext";  // Função de login do AuthContext
 import { useNavigate } from "react-router-dom";
 import logo from '../images/logo.png';
 import { useSnackbar } from "../directives/snackbar/SnackbarContext";

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Typography, Container, Box, List, ListItem, ListItemText, CircularProgress, Alert, Modal, Button, TextField, IconButton, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
-import { useAuth } from '../authContext'; 
+import { useAuth } from '../authenticationContext'; 
 import { bankAccountService } from '../api/bankAccountService';
 import { formatCurrency } from '../util/Util';
 import { creditCardService } from '../api/creditCardService';

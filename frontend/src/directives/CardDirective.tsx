@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { CircularProgress } from '@mui/material';
 import MultiAutoCompleteSelect from './MultiAutoCompleteSelect'; // Importe o MultiAutoCompleteSelect
 import { creditCardService } from '../api/creditCardService'; // Importando o serviço de cartões de crédito
-import { useAuth } from '../authContext';
+import { useAuth } from '../authenticationContext';
 
 interface CardDirectiveProps {
   multiple?: boolean; // Permitir múltiplas seleções (padrão: true)

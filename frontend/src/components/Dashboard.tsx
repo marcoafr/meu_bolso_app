@@ -19,7 +19,7 @@ import {
 } from "@mui/material";
 import { dashboardService } from "../api/dashboardService";
 import { formatCurrency, formatDate } from "../util/Util";
-import { useAuth } from "../authContext";
+import { useAuth } from "../authenticationContext";
 import CardDirective from "../directives/CardDirective";
 import { creditCardService } from "../api/creditCardService";
 import { receivableService } from "../api/receivableService";

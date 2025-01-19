@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Typography, Container, Box, List, ListItem, ListItemText, CircularProgress, Alert, Modal, Button, TextField, IconButton, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
-import { useAuth } from '../authContext'; 
+import { useAuth } from '../authenticationContext'; 
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { categoryBudgetService } from '../api/categoryBudgetService';
 import { formatCurrency } from '../util/Util';

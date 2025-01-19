@@ -4,7 +4,7 @@ import { AppBar, Toolbar, Typography, Button, Box, IconButton, Drawer, List, Lis
 import { Menu as MenuIcon } from "@mui/icons-material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../authContext";
+import { useAuth } from "../authenticationContext";
 import logonotext from '../images/logonotext.png';
 
 const Navbar = () => {

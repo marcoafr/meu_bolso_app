@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { CircularProgress } from '@mui/material';
 import MultiAutoCompleteSelect from './MultiAutoCompleteSelect'; // Importe o MultiAutoCompleteSelect
 import { categoryService } from '../api/categoryService';
-import { useAuth } from '../authContext';
+import { useAuth } from '../authenticationContext';
 
 export interface CategoryDirectiveProps {
   multiple?: boolean; // Permitir múltiplas seleções (padrão: true)
