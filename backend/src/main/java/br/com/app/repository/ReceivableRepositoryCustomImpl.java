@@ -4,6 +4,7 @@ import br.com.app.Constants;
 import br.com.app.dto.ReceivablesRequest;
 import br.com.app.model.Receivable;
 import br.com.app.model.Transaction;
+import br.com.app.model.User;
 import br.com.app.model.BankAccount;
 import br.com.app.model.Category;
 import br.com.app.model.CreditCard;
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Repository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.*;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -30,41 +33,46 @@ public class ReceivableRepositoryCustomImpl implements ReceivableRepositoryCusto
         Root<Receivable> receivable = cq.from(Receivable.class);
         Join<Receivable, Transaction> transaction = receivable.join("transaction", JoinType.INNER); // Relacionamento com Transaction
         Join<Receivable, BankAccount> bankAccount = receivable.join("bankAccount", JoinType.LEFT); // Relacionamento com BankAccount (LEFT JOIN)
+        Join<Receivable, User> user = receivable.join("user", JoinType.INNER); // Relacionamento com User
         Join<Transaction, Category> category = transaction.join("category", JoinType.INNER); // Relacionamento com Category
         Join<Transaction, CreditCard> creditCard = transaction.join("creditCard", JoinType.LEFT); // Relacionamento com CreditCard
 
-        Predicate[] predicates = buildPredicates(request, cb, receivable, transaction, category, creditCard, bankAccount);
+        Predicate[] predicates = buildPredicates(request, cb, receivable, transaction, category, creditCard, bankAccount, user);
         cq.where(predicates);
 
         return entityManager.createQuery(cq).getResultList();
     }
 
-    private Predicate[] buildPredicates(ReceivablesRequest request, CriteriaBuilder cb, Root<Receivable> receivable, Join<Receivable, Transaction> transaction, Join<Transaction, Category> category, Join<Transaction, CreditCard> creditCard, Join<Receivable, BankAccount> bankAccount) {
-        Predicate[] predicates = new Predicate[13]; // Ajuste o tamanho conforme necessário
-
-        int index = 0;
+    private Predicate[] buildPredicates(ReceivablesRequest request, CriteriaBuilder cb, Root<Receivable> receivable, Join<Receivable, Transaction> transaction, Join<Transaction, Category> category, Join<Transaction, CreditCard> creditCard, Join<Receivable, BankAccount> bankAccount, Join<Receivable, User> user) {
+        // Usando uma lista dinâmica de predicados
+        List<Predicate> predicateList = new ArrayList<>();
 
         // Filtrando por bankAccounts (relacionado com receivables)
         if (request.getBankAccounts() != null && !request.getBankAccounts().isEmpty()) {
-            predicates[index++] = bankAccount.get("id").in(request.getBankAccounts());
+            predicateList.add(bankAccount.get("id").in(request.getBankAccounts()));
         }
 
         // Filtrando por categories (relacionado com transactions)
         if (request.getCategories() != null && !request.getCategories().isEmpty()) {
-            predicates[index++] = category.get("id").in(request.getCategories());
+            predicateList.add(category.get("id").in(request.getCategories()));
         }
 
         // Filtrando por creditCards (relacionado com transactions)
         if (request.getCreditCards() != null && !request.getCreditCards().isEmpty()) {
-            predicates[index++] = creditCard.get("id").in(request.getCreditCards());
+            predicateList.add(creditCard.get("id").in(request.getCreditCards()));
         }
 
         // Filtrando por from e to (relacionado com competenceDate de receivable)
         if (request.getFrom() != null) {
-            predicates[index++] = cb.greaterThanOrEqualTo(receivable.get("competenceDate"), request.getFrom());
+            predicateList.add(cb.greaterThanOrEqualTo(receivable.get("competenceDate"), request.getFrom()));
         }
         if (request.getTo() != null) {
-            predicates[index++] = cb.lessThanOrEqualTo(receivable.get("competenceDate"), request.getTo());
+            predicateList.add(cb.lessThanOrEqualTo(receivable.get("competenceDate"), request.getTo()));
+        }
+
+        // Filtrando por id de usuário (relacionado com receivables)
+        if (request.getUserId() != null && request.getUserId() > 0) {
+            predicateList.add(cb.equal(user.get("id"), request.getUserId()));
         }
 
         // Filtrando por status (relacionado com receivables)
@@ -78,21 +86,20 @@ public class ReceivableRepositoryCustomImpl implements ReceivableRepositoryCusto
                 .collect(Collectors.toList());
 
             if (!statusOrdinals.isEmpty()) {
-                predicates[index++] = receivable.get("status").in(statusOrdinals); // Passa os ordinals (números) para a consulta
+                predicateList.add(receivable.get("status").in(statusOrdinals)); // Passa os ordinals (números) para a consulta
             }
         }
 
         // Adicionando filtro para garantir que o status não seja DELETED
-        predicates[index++] = cb.notEqual(receivable.get("status"), Constants.TransactionStatus.DELETED.ordinal());
+        predicateList.add(cb.notEqual(receivable.get("status"), Constants.TransactionStatus.DELETED.ordinal()));
 
         // Filtrando por transactionType (relacionado com category)
         if (request.getTransactionType() != null) {
-            predicates[index++] = cb.equal(category.get("type"), request.getTransactionType());
+            predicateList.add(cb.equal(category.get("type"), request.getTransactionType()));
         }
 
-        // Removendo nulls do array de predicates
-        Predicate[] result = new Predicate[index];
-        System.arraycopy(predicates, 0, result, 0, index);
+        // Convertendo a lista de predicados para um array
+        Predicate[] result = predicateList.toArray(new Predicate[0]);
         
         return result;
     }

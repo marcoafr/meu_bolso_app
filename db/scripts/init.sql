@@ -163,3 +163,7 @@ VALUES (700, 'Curso online', '2025-01-15', currval(pg_get_serial_sequence('categ
 -- Inserir receivables
 INSERT INTO receivables (total_amount, paid_amount, status, transaction_id, competence_date, card_competence_date, user_id, metadata)
 VALUES (700, 700, 1, currval(pg_get_serial_sequence('transactions', 'id')), '2025-01-15', '2025-01-15', currval(pg_get_serial_sequence('users', 'id')), '{}');
+
+-- Inserir usuário 2 exemplo
+INSERT INTO users (name, email, login, password, type)
+VALUES ('Usuário Teste', 'testando123@email.com', '698dc19d489c4e4db73e28a713eab07b', 'f679a329cf546043274be5c0b859355e', 1);

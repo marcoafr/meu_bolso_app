@@ -35,7 +35,7 @@ public interface ReceivableRepository extends JpaRepository<Receivable, Long>, R
     /*
     @Query("SELECT new br.com.app.dto.ReceivableByCategoryDTO(c.id, c.name, c.type, COALESCE(SUM(r.totalAmount), 0), COALESCE(SUM(cb.amount), 0)) FROM Receivable r JOIN r.transaction t JOIN t.category c LEFT JOIN CategoryBudget cb ON cb.category.id = c.id AND cb.user.id = :userId WHERE r.competenceDate BETWEEN :startDate AND :endDate GROUP BY c.id, c.name, c.type")
     */
-    @Query("SELECT new br.com.app.dto.ReceivableByCategoryDTO(c.id, c.name, c.type, COALESCE(SUM(r.totalAmount), 0), COALESCE(SUM(r.paidAmount), 0), COALESCE(SUM(cb.amount), 0)) FROM Receivable r JOIN r.transaction t JOIN t.category c LEFT JOIN CategoryBudget cb ON cb.category.id = c.id AND cb.user.id = :userId WHERE r.competenceDate BETWEEN :startDate AND :endDate AND r.status IN (0, 1) GROUP BY c.id, c.name, c.type")
+    @Query("SELECT new br.com.app.dto.ReceivableByCategoryDTO(c.id, c.name, c.type, COALESCE(SUM(r.totalAmount), 0), COALESCE(SUM(r.paidAmount), 0), COALESCE(SUM(cb.amount), 0)) FROM Receivable r JOIN r.transaction t JOIN t.category c LEFT JOIN CategoryBudget cb ON cb.category.id = c.id AND cb.user.id = :userId WHERE r.competenceDate BETWEEN :startDate AND :endDate AND r.user.id = :userId AND r.status IN (0, 1) GROUP BY c.id, c.name, c.type")
     List<ReceivableByCategoryDTO> findReceivablesByMonthAndUser(@Param("startDate") LocalDate startDate,
                                                                 @Param("endDate") LocalDate endDate,
                                                                 @Param("userId") Long userId

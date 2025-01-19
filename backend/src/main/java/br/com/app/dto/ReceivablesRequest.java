@@ -14,6 +14,7 @@ public class ReceivablesRequest {
     private Integer transactionType;
     private Integer page;
     private Integer pageSize;
+    private Long userId;
 
     // Getters and Setters
     public List<Long> getBankAccounts() {
@@ -94,5 +95,13 @@ public class ReceivablesRequest {
 
     public void setPageSize(Integer pageSize) {
         this.pageSize = pageSize;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 }

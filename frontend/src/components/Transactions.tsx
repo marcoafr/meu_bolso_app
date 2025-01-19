@@ -11,9 +11,11 @@ import { formatCurrency, formatDate } from "../util/Util";
 import { useSnackbar } from "../directives/snackbar/SnackbarContext";
 import TransactionTypeDirective from "../directives/TransactionTypeDirective";
 import CategoryEntityDirective from "../directives/CategoryEntityDirective";
+import { useAuth } from "../authenticationContext";
 
 const Transactions = () => {
   const { showSnackbar } = useSnackbar(); // Usando o hook do Snackbar
+  const { user } = useAuth(); // Pegando o usuário autenticado
   const [filters, setFilters] = useState(() => {
     const today = new Date();
     const yesterday = new Date(today);
@@ -29,6 +31,7 @@ const Transactions = () => {
       bankAccounts: [] as number[],
       creditCards: [] as number[],
       status: [] as number[],
+      userId: user?.id,
     };
   });
 
