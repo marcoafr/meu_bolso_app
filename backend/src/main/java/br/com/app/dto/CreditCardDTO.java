@@ -10,6 +10,10 @@ public class CreditCardDTO {
     private Integer payingDay;
     private Integer status;
 
+    public CreditCardDTO() {
+        
+    }
+
     // Construtor
     public CreditCardDTO(Long id, Long userId, String name, String color, Integer closingDay, Integer payingDay, Integer status) {
         this.id = id;

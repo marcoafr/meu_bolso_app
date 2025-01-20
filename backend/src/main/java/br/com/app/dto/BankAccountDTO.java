@@ -11,6 +11,10 @@ public class BankAccountDTO {
     private BigDecimal initialAmount;
     private Integer status;
 
+    public BankAccountDTO() {
+        
+    }
+
     // Construtor
     public BankAccountDTO(Long id, Long userId, String name, String color, BigDecimal initialAmount, Integer status) {
         this.id = id;

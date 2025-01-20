@@ -7,6 +7,10 @@ public class BankAccountResponseDTO {
     private String name;
     private BigDecimal currentBalance;
 
+    public BankAccountResponseDTO() {
+        
+    }
+
     public BankAccountResponseDTO(Long id, String name, BigDecimal currentBalance) {
         this.id = id;
         this.name = name;

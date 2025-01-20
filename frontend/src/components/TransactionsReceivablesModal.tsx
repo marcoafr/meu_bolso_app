@@ -31,7 +31,8 @@ const TransactionsReceivablesModal = ({ openCategoryModal, setOpenCategoryModal,
         t.issueDate = formatLocalDate(t.issueDate)
         t.userId = user?.id
         t.receivables.forEach(r => {
-            r.competenceDate = formatLocalDate(r.competenceDate)
+            r.competenceDate = formatLocalDate(r.competenceDate);
+            r.cardCompetenceDate = formatLocalDate(r.cardCompetenceDate);
         })
     })
     transactionService

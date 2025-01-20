@@ -8,6 +8,10 @@ public class CategoryDTO {
     private Integer type;
     private Integer status;
 
+    public CategoryDTO() {
+        
+    }
+    
     // Construtor
     public CategoryDTO(Long id, Long userId, String name, Integer type, Integer status) {
         this.id = id;

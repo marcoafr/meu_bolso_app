@@ -13,6 +13,10 @@ public class ReceivableByCategoryDTO {
     private BigDecimal totalPaidAmount;
     private BigDecimal totalExpected;
 
+    public ReceivableByCategoryDTO() {
+        
+    }
+
     public ReceivableByCategoryDTO(Long categoryId, String categoryName, Constants.CategoryType categoryType, BigDecimal totalAmount, BigDecimal totalPaidAmount, BigDecimal totalExpected) {
         this.categoryId = categoryId;
         this.categoryName = categoryName;

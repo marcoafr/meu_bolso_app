@@ -12,6 +12,10 @@ public class CategoryBudgetDTO {
     private String categoryName;
     private Integer categoryType;
 
+    public CategoryBudgetDTO() {
+        
+    }
+
     // Construtor
     public CategoryBudgetDTO(Long id, Long userId, Long categoryId, BigDecimal amount, Integer status, String categoryName, Integer categoryType) {
         this.id = id;

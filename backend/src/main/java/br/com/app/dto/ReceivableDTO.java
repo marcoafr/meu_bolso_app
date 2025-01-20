@@ -14,6 +14,10 @@ public class ReceivableDTO {
     private TransactionDTO transactionDTO;
     private String metadata;  // Novo campo metadata
 
+    public ReceivableDTO() {
+        
+    }
+
     public ReceivableDTO(Long id, BigDecimal amount, LocalDate competenceDate, LocalDate cardCompetenceDate, Integer status, Long bankId ,String bankName, TransactionDTO transactionDTO, String metadata) {
         this.id = id;
         this.amount = amount;

@@ -18,6 +18,10 @@ public class TransactionDTO {
     private String creditCardName;
     private CategoryDTO categoryDTO;
 
+    public TransactionDTO() {
+        
+    }
+
     public TransactionDTO(Long id, BigDecimal totalAmount, LocalDate issueDate, Integer status, Long categoryId, String categoryName, String description, List<ReceivableDTO> receivables, Long userId, Long creditCardId, String creditCardName, CategoryDTO categoryDTO) {
         this.id = id;
         this.totalAmount = totalAmount;
