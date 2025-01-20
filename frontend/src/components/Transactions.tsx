@@ -7,7 +7,7 @@ import BankDirective from "../directives/BankDirective";
 import PaymentStatusDirective from "../directives/PaymentStatusDirective";
 import { receivableService } from "../api/receivableService";
 import { Check, Edit, Clear, Delete } from "@mui/icons-material";
-import { formatCurrency, formatDate } from "../util/Util";
+import { formatCurrency, formatDate, formatArrayDate } from "../util/Util";
 import { useSnackbar } from "../directives/snackbar/SnackbarContext";
 import TransactionTypeDirective from "../directives/TransactionTypeDirective";
 import CategoryEntityDirective from "../directives/CategoryEntityDirective";
@@ -416,7 +416,12 @@ const Transactions = () => {
                       Status: {r.status === 0 ? "Pendente" : r.status === 1 ? "Pago" : "Cancelado"}
                     </Typography>
                     <Typography variant="body1" color="textSecondary" textAlign="right">
-                      Data: {formatDate(r.competenceDate)}
+                      Data: {formatArrayDate(r.competenceDate)}
+                    </Typography>
+                  </Box>
+                  <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Typography variant="h6" color="textSecondary" textAlign="center">
+                      {r.transactionDTO.description}
                     </Typography>
                   </Box>
                   <Box display="flex" justifyContent="space-between" alignItems="center">

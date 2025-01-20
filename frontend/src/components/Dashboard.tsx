@@ -18,7 +18,7 @@ import {
   TableRow,
 } from "@mui/material";
 import { dashboardService } from "../api/dashboardService";
-import { formatCurrency, formatDate } from "../util/Util";
+import { formatCurrency, formatArrayDate } from "../util/Util";
 import { useAuth } from "../authenticationContext";
 import CardDirective from "../directives/CardDirective";
 import { creditCardService } from "../api/creditCardService";
@@ -75,7 +75,7 @@ const Dashboard = () => {
         }).then((data) => {
           if (data.length > 0) {
             data.forEach((r) => {
-              r.competenceDate = r.competenceDate ? formatDate(r.competenceDate) : "";
+              r.competenceDate = r.competenceDate ? formatArrayDate(r.competenceDate) : "";
               r.metadata = r.metadata ? JSON.parse(r.metadata) : {};
             });
           }

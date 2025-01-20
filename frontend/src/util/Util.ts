@@ -24,6 +24,18 @@ export const formatLocalDate = (date: { year: number, month: number, day: number
   return `${year}-${month}-${day}`;
 };
 
+// Função para formatar um objeto [year, month, day] para o formato 'yyyy-MM-dd'
+export const formatArrayDate = (dateArray: [number, number, number]): string => {
+  const [year, month, day] = dateArray;
+
+  // Formata o mês e o dia para dois dígitos
+  const formattedMonth = String(month).padStart(2, '0');
+  const formattedDay = String(day).padStart(2, '0');
+
+  // Retorna no formato 'yyyy-MM-dd'
+  return `${formattedDay}/${formattedMonth}/${year}`;
+};
+
 export const formatDate = (dateString: string) => {
   const date = new Date(dateString + "T00:00:00Z"); // Garantir que a data seja interpretada como UTC
   const day = String(date.getUTCDate()).padStart(2, "0"); // Usa getUTCDate() para evitar o fuso horário local
