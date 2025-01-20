@@ -16,7 +16,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/api/**")
                 .allowedOrigins("http://103.199.186.65:5173", "http://localhost:5173", "https://meubolso.tech")  // Permite requisições de 103.199.186.65:5173, localhost:5173 e meubolso.tech
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*");
+                .allowedHeaders("*")
                 .allowCredentials(true);  // Permite cookies e credenciais
     }
 }
