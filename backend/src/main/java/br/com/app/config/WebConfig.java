@@ -14,7 +14,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         // Configuração global para todas as rotas começando com /api
         registry.addMapping("/api/**")
-                .allowedOrigins("http://103.199.186.65:5173", "http://localhost:5173")  // Permite requisições de 103.199.186.65:5173 e localhost:5173
+                .allowedOrigins("http://103.199.186.65:5173", "http://localhost:5173", "http://meubolso.tech")  // Permite requisições de 103.199.186.65:5173, localhost:5173 e meubolso.tech
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*");
                 //.allowCredentials(true);  // Permite qualquer cabeçalho
