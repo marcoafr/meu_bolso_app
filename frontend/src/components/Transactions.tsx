@@ -36,7 +36,7 @@ const Transactions = () => {
   });
 
   const [transactions, setTransactions] = useState<any[]>([]); // Armazena as transações
-  const [sortOption, setSortOption] = useState<string>("dataC"); // Estado para armazenar a opção de classificação
+  const [sortOption, setSortOption] = useState<string>("dataD"); // Estado para armazenar a opção de classificação
   const [loading, setLoading] = useState<boolean>(false); // Estado para controle de loading
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null); // Estado para controle do Menu
 
@@ -300,8 +300,13 @@ const Transactions = () => {
   };
 
   const isInstallment = (transaction: any): boolean => {
-    return transaction !== null && transaction.metadata !== null && transaction.metadata.hasOwnProperty('installment') && transaction.metadata.hasOwnProperty('total_installments');
-  };
+    return (
+      transaction &&
+      transaction.metadata &&
+      'installment' in transaction.metadata &&
+      'total_installments' in transaction.metadata
+    );
+  };  
 
   return (
     <Container>
@@ -369,7 +374,7 @@ const Transactions = () => {
               style={{ marginLeft: "10px" }}
               disabled={loading || transactions.length === 0}
             >
-              Classificar por: 
+              Classificar: 
               {
                 sortOption === "dataC" ? "Data (C.)" : 
                 sortOption === "dataD" ? "Data (D.)" : 
@@ -470,7 +475,6 @@ const Transactions = () => {
         </Grid>
       </Box>
 
-      {/* Modal de Liquidação */}
       <Modal open={openModalLiquidation} onClose={handleModalCloseLiquidation}>
         <Box sx={{
           position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", 
@@ -503,7 +507,6 @@ const Transactions = () => {
         </Box>
       </Modal>
 
-      {/* Modal de Edição */}
       <Modal open={openEditModal} onClose={handleEditClose}>
         <Box sx={{ width: 400, padding: 4, margin: "auto", mt: 10, backgroundColor: "white", borderRadius: 2, maxWidth:"80%"}}>
           <Typography variant="h6" gutterBottom>
@@ -552,9 +555,7 @@ const Transactions = () => {
             </Button>
           </Box>
         </Box>
-
       </Modal>
-        {/* Seu código existente */}
         <Dialog
           open={isDialogOpen}
           onClose={() => setIsDialogOpen(false)}
@@ -583,7 +584,6 @@ const Transactions = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Dialog de Cancelamento */}
       <Dialog
         open={openCancelDialog}
         onClose={closeDialogCancelDelete}
@@ -612,7 +612,6 @@ const Transactions = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Dialog de Deleção */}
       <Dialog
         open={openDeleteDialog}
         onClose={closeDialogCancelDelete}

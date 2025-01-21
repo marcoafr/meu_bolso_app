@@ -10,14 +10,14 @@ const DateDirective: React.FC<DateDirectiveProps> = ({ onChange, initialDates })
   const [fromDate, setFromDate] = useState<string | null>(initialDates?.from || null);
   const [toDate, setToDate] = useState<string | null>(initialDates?.to || null);
 
-  // Atualiza os valores iniciais no momento da montagem
   useEffect(() => {
-    if (initialDates) {
-      setFromDate(initialDates.from);
-      setToDate(initialDates.to);
-      onChange(initialDates);
+    // Only update if `initialDates` has changed.
+    if (initialDates?.from !== fromDate || initialDates?.to !== toDate) {
+      setFromDate(initialDates?.from || null);
+      setToDate(initialDates?.to || null);
+      onChange(initialDates || { from: null, to: null });
     }
-  }, [initialDates, onChange]);
+  }, [initialDates]);
 
   const handleFromChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFromDate(e.target.value);
