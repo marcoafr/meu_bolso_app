@@ -57,6 +57,7 @@ const Dashboard = () => {
   // Effect to monitor changes in filters
   useEffect(() => {
     if (!selectedCard || selectedCard.id == 0) {
+      setSummarizedInfo([]);
       return; // Não faz a consulta se selectedCard for null ou 0
     }
   
@@ -208,9 +209,9 @@ const Dashboard = () => {
                     Valor Total da Fatura: {formatCurrency(summarizedInfo.reduce((acc, r) => acc + r.amount, 0))}
                   </Typography>
                   <Typography variant="body1">
-                    Dia de Pagamento: {String(selectedCard.payingDay).padStart(2, '0')} /{' '}
+                    Dia de Pagamento: {String(selectedCard?.payingDay).padStart(2, '0')} /{' '}
                     {String(
-                      selectedCard.payingDay - selectedCard.closingDay < 0
+                      selectedCard?.payingDay - selectedCard?.closingDay < 0
                         ? + selectedMonthYear.month + 1
                         : + selectedMonthYear.month
                     ).padStart(2, '0')}
