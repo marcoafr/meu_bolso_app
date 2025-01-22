@@ -8,21 +8,14 @@ import {
   FormControl,
   MenuItem,
   Select,
-  InputLabel,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
+  InputLabel
 } from "@mui/material";
 import { dashboardService } from "../api/dashboardService";
 import { formatCurrency, formatArrayDate } from "../util/Util";
 import { useAuth } from "../authenticationContext";
-import CardDirective from "../directives/CardDirective";
 import { creditCardService } from "../api/creditCardService";
 import { receivableService } from "../api/receivableService";
+import CardEntityDirective from "../directives/CardEntityDirective";
 
 interface BankAccountBalance {
   id: number;
@@ -34,7 +27,7 @@ interface BankAccountBalance {
 const Dashboard = () => {
   const [bankAccounts, setBankAccounts] = useState<BankAccountBalance[]>([]);
   const { user } = useAuth();
-  const [selectedCard, setSelectedCard] = useState<number | null>(null);
+  const [selectedCard, setSelectedCard] = useState<any>(null);
   const currentDate = new Date();
   const [selectedMonthYear, setSelectedMonthYear] = useState<{ month: string; year: string }>({
     month: (currentDate.getMonth() + 1).toString().padStart(2, "0"),
@@ -63,13 +56,13 @@ const Dashboard = () => {
 
   // Effect to monitor changes in filters
   useEffect(() => {
-    if (!selectedCard) {
+    if (!selectedCard || selectedCard.id == 0) {
       return; // Não faz a consulta se selectedCard for null ou 0
     }
   
-    if (selectedCard && selectedCard > 0 && selectedMonthYear.month && selectedMonthYear.year) {
+    if (selectedCard && selectedCard.id > 0 && selectedMonthYear.month && selectedMonthYear.year) {
       creditCardService.summarizedInfo({
-          creditCardId: selectedCard!,
+          creditCardId: selectedCard!.id,
           month: selectedMonthYear.month,
           year: selectedMonthYear.year,
           userId: user?.id,
@@ -161,9 +154,9 @@ const Dashboard = () => {
             </Typography>
 
             <FormControl fullWidth margin="normal">
-              <CardDirective
+              <CardEntityDirective
                 value={selectedCard!}
-                onChange={(newCard) => setSelectedCard(Number(newCard))}
+                onChange={(newCard) => setSelectedCard(newCard)}
                 multiple={false}
               />
             </FormControl>
@@ -208,42 +201,59 @@ const Dashboard = () => {
 
             {/* Tabela transformada em uma lista para mobile */}
             {summarizedInfo.length > 0 ? (
-              <Box sx={{ marginTop: 2 }}>
-                {summarizedInfo.map((r, index) => (
-                  <Card key={index} sx={{ backgroundColor: "#fff", marginBottom: 2, padding: 2, borderRadius: 2 }}>
-                    <CardContent>
-                      <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                        {r.transactionDTO.description}
-                      </Typography>
-                      <Typography variant="body2">
-                        <strong>Categoria:</strong> {r.transactionDTO.categoryDTO.name}
-                      </Typography>
-                      <Typography variant="body2">
-                        <strong>Data:</strong> {r.competenceDate}
-                      </Typography>
-                      <Typography variant="body2">
-                        <strong>Valor:</strong> {formatCurrency(r.amount)}
-                      </Typography>
-                      <Typography variant="body2">
-                        <strong>Status:</strong> {r.status === 0
-                          ? "Pendente"
-                          : r.status === 1
-                          ? "Pago"
-                          : r.status === 3
-                          ? "Pendente"
-                          : r.status === 4
-                          ? "Deletado"
-                          : "Desconhecido"}
-                      </Typography>
-                      <Typography variant="body2">
-                        <strong>Observação:</strong> {r.metadata && r.metadata.installment && r.metadata.total_installments
-                          ? `Parcela ${r.metadata.installment} / ${r.metadata.total_installments}`
-                          : ""}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                ))}
-              </Box>
+              <>
+                {/* Linha com o valor total da fatura e dia de pagamento */}
+                <Box sx={{ marginY: 2, padding: 2, backgroundColor: "#e0e0e0", borderRadius: 2 }}>
+                  <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+                    Valor Total da Fatura: {formatCurrency(summarizedInfo.reduce((acc, r) => acc + r.amount, 0))}
+                  </Typography>
+                  <Typography variant="body1">
+                    Dia de Pagamento: {String(selectedCard.payingDay).padStart(2, '0')} /{' '}
+                    {String(
+                      selectedCard.payingDay - selectedCard.closingDay < 0
+                        ? + selectedMonthYear.month + 1
+                        : + selectedMonthYear.month
+                    ).padStart(2, '0')}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ marginTop: 2 }}>
+                  {summarizedInfo.map((r, index) => (
+                    <Card key={index} sx={{ backgroundColor: "#fff", marginBottom: 2, padding: 2, borderRadius: 2 }}>
+                      <CardContent>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                          {r.transactionDTO.description}
+                        </Typography>
+                        <Typography variant="body2">
+                          <strong>Categoria:</strong> {r.transactionDTO.categoryDTO.name}
+                        </Typography>
+                        <Typography variant="body2">
+                          <strong>Data:</strong> {r.competenceDate}
+                        </Typography>
+                        <Typography variant="body2">
+                          <strong>Valor:</strong> {formatCurrency(r.amount)}
+                        </Typography>
+                        <Typography variant="body2">
+                          <strong>Status:</strong> {r.status === 0
+                            ? "Pendente"
+                            : r.status === 1
+                            ? "Pago"
+                            : r.status === 3
+                            ? "Pendente"
+                            : r.status === 4
+                            ? "Deletado"
+                            : "Desconhecido"}
+                        </Typography>
+                        <Typography variant="body2">
+                          <strong>Observação:</strong> {r.metadata && r.metadata.installment && r.metadata.total_installments
+                            ? `Parcela ${r.metadata.installment} / ${r.metadata.total_installments}`
+                            : ""}
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </Box>
+              </>
             ) : (
               <Typography>Nenhuma transação encontrada para o filtro selecionado.</Typography> 
             )}

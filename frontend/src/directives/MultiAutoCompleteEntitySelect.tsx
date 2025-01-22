@@ -10,6 +10,7 @@ interface MultiAutoCompleteEntitySelectProps<T> {
   placeholder?: string; // Placeholder do campo
   getOptionLabel: (option: T) => string; // Função para determinar o rótulo das opções
   loading?: boolean; // Estado de carregamento
+  renderOption?: any;
 }
 
 const MultiAutoCompleteEntitySelect = <T extends { id: number }>({
@@ -21,6 +22,7 @@ const MultiAutoCompleteEntitySelect = <T extends { id: number }>({
   placeholder = "Selecione",
   getOptionLabel,
   loading = false, // Recebe o estado de carregamento
+  renderOption,
 }: MultiAutoCompleteEntitySelectProps<T>) => {
   const [selectedValue, setSelectedValue] = useState<T | T[] | null>(value);
 
@@ -40,6 +42,7 @@ const MultiAutoCompleteEntitySelect = <T extends { id: number }>({
       getOptionLabel={getOptionLabel}
       value={selectedValue}
       onChange={handleChange}
+      renderOption={renderOption}
       renderInput={(params) => (
         <TextField {...params} label={label} placeholder={placeholder} />
       )}
