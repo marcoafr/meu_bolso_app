@@ -41,6 +41,7 @@ public class DashboardController {
             return new BankAccountResponseDTO(
                     account.getId(),
                     account.getName(),
+                    account.getColor(),
                     account.getInitialAmount().subtract(totalPaidReceivables)
             );
         }).collect(Collectors.toList());

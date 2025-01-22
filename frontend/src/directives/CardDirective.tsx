@@ -51,12 +51,29 @@ const CardDirective: React.FC<CardDirectiveProps> = ({
   const options = creditCards.map((card) => ({
     id: card.id,
     label: card.name,
+    color: card.color,
   }));
 
   const handleChange = (newValue: number | number[]) => {
     // Lida com a mudança, garantindo que o valor esteja no formato esperado
     onChange(newValue);
   };
+
+  const renderOption = (props: React.HTMLAttributes<HTMLLIElement>, option: any) => (
+    <li {...props}>
+      <span
+        style={{
+          display: 'inline-block',
+          width: 16,
+          height: 16,
+          backgroundColor: option.color,
+          borderRadius: 4, // Opção de deixar as bordas arredondadas
+          marginRight: 8,
+        }}
+      ></span>
+      {option.label}
+    </li>
+  );
 
   return (
     <MultiAutoCompleteSelect
@@ -65,6 +82,7 @@ const CardDirective: React.FC<CardDirectiveProps> = ({
       options={options}
       label="Cartão de Crédito"
       multiple={multiple}
+      renderOption={renderOption}
     />
   );
 };

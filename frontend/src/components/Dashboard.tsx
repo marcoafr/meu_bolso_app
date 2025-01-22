@@ -28,6 +28,7 @@ interface BankAccountBalance {
   id: number;
   name: string;
   currentBalance: number;
+  color: string;
 }
 
 const Dashboard = () => {
@@ -71,7 +72,7 @@ const Dashboard = () => {
           creditCardId: selectedCard!,
           month: selectedMonthYear.month,
           year: selectedMonthYear.year,
-          userId: user?.id!,
+          userId: user?.id,
         }).then((data) => {
           if (data.length > 0) {
             data.forEach((r) => {
@@ -133,6 +134,16 @@ const Dashboard = () => {
             {bankAccounts.length > 0 ? (
               bankAccounts.map((account) => (
                 <Typography key={account.id}>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: 16,
+                      height: 16,
+                      backgroundColor: account.color,
+                      borderRadius: 4,
+                      marginRight: 8,
+                    }}
+                  ></span>
                   {account.name}: {formatCurrency(account.currentBalance)}
                 </Typography>
               ))
@@ -340,33 +351,56 @@ const Dashboard = () => {
             {/* Exibição da Tabela com Recebíveis por Categoria */}
             {receivablesByCategory.length > 0 ? (
               <Box sx={{ marginTop: 2 }}>
-                {receivablesByCategory.map((r, index) => (
-                  <Card key={index} sx={{ backgroundColor: "#fff", marginBottom: 2, padding: 2, borderRadius: 2 }}>
-                    <CardContent>
-                      <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                        {r.categoryName}
-                      </Typography>
-                      <Typography variant="body2">
-                        <strong>Total Pago:</strong> {formatCurrency(r.totalPaidAmount)}
-                      </Typography>
-                      <Typography variant="body2">
-                        <strong>Total Previsto:</strong> {formatCurrency(r.totalAmount - r.totalPaidAmount)}
-                      </Typography>
-                      <Typography variant="body2">
-                        <strong>Total (Pago e Previsto):</strong> {formatCurrency(r.totalAmount)}
-                      </Typography>
-                      <Typography variant="body2">
-                        <strong>Total Orçamento:</strong> {formatCurrency(r.totalExpected)}
-                      </Typography>
-                      <Typography variant="body2" sx={{
-                        color: r.totalExpected - r.totalAmount >= 0 ? 'green' : 'red',
-                        fontWeight: 'bold',
-                      }}>
-                        <strong>Diferença:</strong> {formatCurrency(r.totalExpected - r.totalAmount)}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                ))}
+                {receivablesByCategory.map((r, index) => {
+                  const difference =
+                    r.categoryType === 'RECEIPT'
+                      ? r.totalAmount - r.totalExpected
+                      : r.totalExpected - r.totalAmount;
+
+                  const percentage =
+                    r.totalExpected === 0
+                      ? 'n/a'
+                      : `${((r.totalAmount / r.totalExpected) * 100).toFixed(2)}%`;
+
+                  return (
+                    <Card
+                      key={index}
+                      sx={{
+                        backgroundColor: r.categoryType === 'RECEIPT' ? 'rgba(232, 255, 232, 0.7)' : 'rgb(255, 224, 224, 0.7)',
+                        marginBottom: 2,
+                        padding: 2,
+                        borderRadius: 2,
+                      }}
+                    >
+                      <CardContent>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                          {r.categoryName}
+                        </Typography>
+                        <Typography variant="body2">
+                          <strong>Total Pago:</strong> {formatCurrency(r.totalPaidAmount)}
+                        </Typography>
+                        <Typography variant="body2">
+                          <strong>Total Previsto:</strong> {formatCurrency(r.totalAmount - r.totalPaidAmount)}
+                        </Typography>
+                        <Typography variant="body2">
+                          <strong>Total (Pago e Previsto):</strong> {formatCurrency(r.totalAmount)}
+                        </Typography>
+                        <Typography variant="body2">
+                          <strong>Total Orçamento:</strong> {formatCurrency(r.totalExpected)}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: difference >= 0 ? 'green' : 'red',
+                            fontWeight: 'bold',
+                          }}
+                        >
+                          <strong>Diferença:</strong> {formatCurrency(difference)} ({percentage})
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </Box>
             ) : (
               <Typography>Nenhum recebível encontrado para o período selecionado.</Typography>

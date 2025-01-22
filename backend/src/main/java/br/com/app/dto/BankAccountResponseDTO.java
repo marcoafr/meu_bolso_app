@@ -5,15 +5,17 @@ import java.math.BigDecimal;
 public class BankAccountResponseDTO {
     private Long id;
     private String name;
+    private String color;
     private BigDecimal currentBalance;
 
     public BankAccountResponseDTO() {
         
     }
 
-    public BankAccountResponseDTO(Long id, String name, BigDecimal currentBalance) {
+    public BankAccountResponseDTO(Long id, String name, String color, BigDecimal currentBalance) {
         this.id = id;
         this.name = name;
+        this.color = color;
         this.currentBalance = currentBalance;
     }
 
@@ -32,6 +34,14 @@ public class BankAccountResponseDTO {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
     }
 
     public BigDecimal getCurrentBalance() {

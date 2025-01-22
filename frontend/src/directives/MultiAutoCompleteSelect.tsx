@@ -9,6 +9,10 @@ interface MultiAutoCompleteSelectProps {
   multiple?: boolean;
   placeholder?: string;
   getOptionLabel?: (option: { id: number; label: string }) => string;
+  renderOption?: (
+    props: React.HTMLAttributes<HTMLLIElement>,
+    option: { id: number; label: string }
+  ) => React.ReactNode; // Nova prop opcional
 }
 
 const MultiAutoCompleteSelect: React.FC<MultiAutoCompleteSelectProps> = ({
@@ -19,6 +23,7 @@ const MultiAutoCompleteSelect: React.FC<MultiAutoCompleteSelectProps> = ({
   multiple = false,
   placeholder = "Selecione",
   getOptionLabel = (option) => option.label,
+  renderOption,
 }) => {
   const handleChange = (event: any, newValue: any) => {
     if (multiple) {
@@ -50,6 +55,7 @@ const MultiAutoCompleteSelect: React.FC<MultiAutoCompleteSelectProps> = ({
           />
         ))
       }
+      renderOption={renderOption} 
     />
   );
 };

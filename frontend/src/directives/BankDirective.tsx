@@ -60,8 +60,25 @@ const BankDirective: React.FC<BankDirectiveProps> = ({
   const options = bankAccounts.map((account) => ({
     id: account.id,
     label: account.name,
+    color: account.color,
   }));
 
+  const renderOption = (props: React.HTMLAttributes<HTMLLIElement>, option: any) => (
+    <li {...props}>
+      <span
+        style={{
+          display: 'inline-block',
+          width: 16,
+          height: 16,
+          backgroundColor: option.color,
+          borderRadius: 4, // Opção de deixar as bordas arredondadas
+          marginRight: 8,
+        }}
+      ></span>
+      {option.label}
+    </li>
+  );
+  
   return (
     <MultiAutoCompleteSelect
       value={value}
@@ -70,6 +87,7 @@ const BankDirective: React.FC<BankDirectiveProps> = ({
       options={options} // Passa as opções mapeadas
       label="Conta Bancária"
       getOptionLabel={(option) => option.label} // Função para exibir o nome da conta
+      renderOption={renderOption}
     />
   );
 };
