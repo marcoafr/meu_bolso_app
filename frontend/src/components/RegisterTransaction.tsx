@@ -12,6 +12,7 @@ import {
   FormControlLabel,
   RadioGroup,
   Radio,
+  FormLabel,
 } from "@mui/material";
 import CategoryDirective from '../directives/CategoryDirective';
 import BankDirective from '../directives/BankDirective';
@@ -34,6 +35,7 @@ const RegisterTransaction = () => {
   const [recurrenceInterval, setRecurrenceInterval] = useState<'diario' | 'semanal' | 'quinzenal' | 'mensal' | 'anual' >('mensal');
   const [recurrenceQuantity, setRecurrenceQuantity] = useState<number>(2);
   const [category, setCategory] = useState<number>(0);
+  const [alreadyPaid, setAlreadyPaid] = useState<boolean>(true);
   const [bank, setBank] = useState<number>(0); // Tipar o estado como number | string
   const [card, setCard] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<'banco' | 'cartao'>('banco');
@@ -131,6 +133,7 @@ const RegisterTransaction = () => {
         paymentMethod,
         bank,
         card,
+        alreadyPaid,
   
         // installments
         installments,
@@ -256,15 +259,32 @@ const RegisterTransaction = () => {
         </FormControl>
 
         {paymentMethod === 'banco' && (
-          <FormControl fullWidth margin="normal">
-            <BankDirective
-              value={bank}
-              onChange={(newBankValue) => {
-                setBank(Number(newBankValue));
-              }}
-              multiple={false} // Apenas uma seleção
-            />
-          </FormControl>
+          <>
+          {
+            paymentType === 'unique' && (
+              <FormControl fullWidth margin="normal">
+                <FormLabel>Já pago?</FormLabel>
+                <RadioGroup
+                  row
+                  value={alreadyPaid}
+                  onChange={() => setAlreadyPaid(!alreadyPaid)}
+                >
+                  <FormControlLabel value={true} control={<Radio />} label="Sim" />
+                  <FormControlLabel value={false} control={<Radio />} label="Não" />
+                </RadioGroup>
+              </FormControl>
+            )
+          }
+            <FormControl fullWidth margin="normal">
+              <BankDirective
+                value={bank}
+                onChange={(newBankValue) => {
+                  setBank(Number(newBankValue));
+                }}
+                multiple={false} // Apenas uma seleção
+              />
+            </FormControl>
+          </>
         )}
         {
           paymentMethod === 'cartao' && (

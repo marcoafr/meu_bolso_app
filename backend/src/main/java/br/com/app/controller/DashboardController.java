@@ -34,7 +34,11 @@ public class DashboardController {
             BigDecimal totalPaidReceivables = receivableRepository
                 .findByBankAccountIdAndStatus(account.getId(), Constants.TransactionStatus.PAID)
                 .stream()
-                .map(Receivable::getPaidAmount) // Mapeia para BigDecimal
+                .map(receivable -> {
+                    BigDecimal amount = receivable.getPaidAmount();
+                    Constants.CategoryType type = receivable.getTransaction().getCategory().getType();
+                    return type == Constants.CategoryType.RECEIPT ? amount.negate() : amount; // Subtrai se for RECEIPT, soma se for EXPENSE
+                })
                 .reduce(BigDecimal.ZERO, BigDecimal::add); // Soma os valores
 
             // Criar um DTO com o saldo atualizado

@@ -94,7 +94,9 @@ public class ReceivableController {
                         (receivable.getBankAccount() != null && receivable.getBankAccount().getId() != null && receivable.getBankAccount().getId() > 0) ?receivable.getBankAccount().getId() : null,
                         (receivable.getBankAccount() != null && receivable.getBankAccount().getName() != null && !receivable.getBankAccount().getName().isEmpty()) ? receivable.getBankAccount().getName() : null,
                         transactionDTO,
-                        receivable.getMetadata()
+                        receivable.getMetadata(),
+                        receivable.getPaidAmount(),
+                        receivable.getPaymentDate()
                 );
             })
             .collect(Collectors.toList());
@@ -155,7 +157,9 @@ public class ReceivableController {
             receivable.getBankAccount().getId(),
             receivable.getBankAccount().getName(),
             null,
-            receivable.getMetadata()
+            receivable.getMetadata(),
+            receivable.getPaidAmount(),
+            receivable.getPaymentDate()
         );
     }   
     
@@ -203,7 +207,9 @@ public class ReceivableController {
             receivable.getBankAccount() != null ? receivable.getBankAccount().getId() : null,
             receivable.getBankAccount() != null ? receivable.getBankAccount().getName() : null,
             null,
-            receivable.getMetadata()
+            receivable.getMetadata(),
+            receivable.getPaidAmount(),
+            receivable.getPaymentDate()
         );
     }
 

@@ -70,6 +70,11 @@ public class TransactionController {
                     receivable.getBankAccount().setId(receivableDTO.getBankId());
                 }
 
+                if (receivableDTO.getPaymentDate() != null && receivableDTO.getPaidAmount() != null) {
+                    receivable.setPaymentDate(receivableDTO.getPaymentDate());
+                    receivable.setPaidAmount(receivableDTO.getPaidAmount());
+                }
+
                 // Salva o recebível
                 receivableRepository.save(receivable);
             }

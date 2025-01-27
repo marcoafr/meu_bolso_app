@@ -164,7 +164,9 @@ public class CreditCardController {
                         receivable.getBankAccount() != null ? receivable.getBankAccount().getId() : null,
                         receivable.getBankAccount() != null ? receivable.getBankAccount().getName() : null,
                         transactionDTO,
-                        receivable.getMetadata() // Incluído o novo campo metadata
+                        receivable.getMetadata(), // Incluído o novo campo metadata
+                        receivable.getPaidAmount(),
+                        receivable.getPaymentDate()
                 );
             })
             .collect(Collectors.toList());

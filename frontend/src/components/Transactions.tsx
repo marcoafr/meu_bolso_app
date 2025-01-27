@@ -204,15 +204,16 @@ const Transactions = () => {
     }
   };
 
-  const handleLiquidate = (id: number) => {
-    setSelectedReceivableLiquidation(id); // Armazena o id da transação
-    setSelectedBankAccountLiquidation(null); // Reseta o banco selecionado
+  const handleLiquidate = (receivable: any) => {
+    setSelectedReceivableLiquidation(receivable.id); // Armazena o id da transação
+    setSelectedBankAccountLiquidation(receivable.bankId); // Reseta o banco selecionado
     setPaymentDateLiquidation(new Date().toISOString().split("T")[0]); // Define a data de pagamento como hoje
     setOpenModalLiquidation(true); // Abre o modal
   };
 
   const handleModalCloseLiquidation = () => {
     setOpenModalLiquidation(false); // Fecha o modal
+    setSelectedBankAccountLiquidation(null); // Reseta o banco selecionado
   };
   
   const handleConfirmLiquidation = () => {
@@ -450,7 +451,7 @@ const Transactions = () => {
                       ) : (
                         <>
                           <Tooltip title="Liquidar">
-                            <IconButton onClick={() => handleLiquidate(r.id)} color="success">
+                            <IconButton onClick={() => handleLiquidate(r)} color="success">
                               <Check />
                             </IconButton>
                           </Tooltip>
@@ -483,7 +484,7 @@ const Transactions = () => {
           <Typography variant="h6" gutterBottom>Liquidar Transação</Typography>
 
           <BankDirective
-            value={selectedBankAccountLiquidation ? [selectedBankAccountLiquidation] : []}
+            value={selectedBankAccountLiquidation!}
             multiple={false}
             onChange={(value) => setSelectedBankAccountLiquidation(Array.isArray(value) ? value[0] : value)}
           />

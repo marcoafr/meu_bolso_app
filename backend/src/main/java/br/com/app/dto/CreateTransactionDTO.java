@@ -21,6 +21,7 @@ public class CreateTransactionDTO {
     private BigDecimal totalAmount;
     private String type;
     private Long userId;
+    private Boolean alreadyPaid;
 
     // Getters e Setters
     public Long getBank() {
@@ -157,5 +158,13 @@ public class CreateTransactionDTO {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public Boolean getAlreadyPaid() {
+        return alreadyPaid;
+    }
+
+    public void setAlreadyPaid(Boolean alreadyPaid) {
+        this.alreadyPaid = alreadyPaid;
     }
 }

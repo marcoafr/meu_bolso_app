@@ -109,7 +109,9 @@ public class CreateTransactionController {
                             ? receivable.getBankAccount().getName() 
                             : null,
                         null,
-                        receivable.getMetadata()
+                        receivable.getMetadata(),
+                        receivable.getPaidAmount(),
+                        receivable.getPaymentDate()
                 ))
                 .collect(Collectors.toList());
 
@@ -259,6 +261,13 @@ public class CreateTransactionController {
             receivable.setBankAccount(new BankAccount());
             receivable.getBankAccount().setId(dto.getBank());
             receivable.getBankAccount().setName(dto.getBankName());
+
+            if (dto.getAlreadyPaid() != null && dto.getAlreadyPaid()) {
+                receivable.setPaymentDate(dto.getDate());
+                receivable.setPaidAmount(dto.getTotalAmount());
+                receivable.setStatus(Constants.TransactionStatus.PAID);
+                transaction.setStatus(Constants.TransactionStatus.PAID);
+            }
         }
         
         transaction.setReceivables(List.of(receivable));

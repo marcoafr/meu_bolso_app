@@ -33,6 +33,9 @@ const TransactionsReceivablesModal = ({ openCategoryModal, setOpenCategoryModal,
         t.receivables.forEach(r => {
             r.competenceDate = formatLocalDate(r.competenceDate);
             r.cardCompetenceDate = formatLocalDate(r.cardCompetenceDate);
+            if (r.paymentDate != null) {
+                r.paymentDate = formatLocalDate(r.paymentDate);
+            }
         })
     })
     transactionService

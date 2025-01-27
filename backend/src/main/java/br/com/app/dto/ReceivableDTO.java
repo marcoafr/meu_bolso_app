@@ -13,12 +13,14 @@ public class ReceivableDTO {
     private String bankName;
     private TransactionDTO transactionDTO;
     private String metadata;  // Novo campo metadata
+    private BigDecimal paidAmount;
+    private LocalDate paymentDate;
 
     public ReceivableDTO() {
         
     }
 
-    public ReceivableDTO(Long id, BigDecimal amount, LocalDate competenceDate, LocalDate cardCompetenceDate, Integer status, Long bankId ,String bankName, TransactionDTO transactionDTO, String metadata) {
+    public ReceivableDTO(Long id, BigDecimal amount, LocalDate competenceDate, LocalDate cardCompetenceDate, Integer status, Long bankId ,String bankName, TransactionDTO transactionDTO, String metadata, BigDecimal paidAmount, LocalDate paymentDate) {
         this.id = id;
         this.amount = amount;
         this.competenceDate = competenceDate;
@@ -28,6 +30,8 @@ public class ReceivableDTO {
         this.bankName = bankName;
         this.transactionDTO = transactionDTO;
         this.metadata = metadata;
+        this.paidAmount = paidAmount;
+        this.paymentDate = paymentDate;
     }
 
     // Getters e Setters
@@ -102,5 +106,21 @@ public class ReceivableDTO {
 
     public void setMetadata(String metadata) {
         this.metadata = metadata;
+    }
+
+    public BigDecimal getPaidAmount() {
+        return paidAmount;
+    }
+
+    public void setPaidAmount(BigDecimal paidAmount) {
+        this.paidAmount = paidAmount;
+    }
+    
+    public LocalDate getPaymentDate() {
+        return paymentDate;
+    }
+    
+    public void setPaymentDate(LocalDate paymentDate) {
+        this.paymentDate = paymentDate;
     }
 }
