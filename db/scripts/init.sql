@@ -92,6 +92,19 @@ CREATE TABLE receivables (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
 );
 
+-- Criar a tabela transfers
+CREATE TABLE transfers ( 
+    id BIGSERIAL PRIMARY KEY, 
+    amount NUMERIC(11, 2) NOT NULL, 
+    date DATE NOT NULL, 
+    bank_account_from_id BIGINT NOT NULL REFERENCES bank_accounts(id),
+    bank_account_to_id BIGINT NOT NULL REFERENCES bank_accounts(id),
+    user_id BIGINT NOT NULL REFERENCES users(id),
+    status INTEGER NOT NULL DEFAULT 0 CHECK (status IN (0, 1)), -- 0 - active, 1 - inactive
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+);
+
 -- Inserir usuário inicial
 INSERT INTO users (name, email, login, password, type)
 VALUES ('Marco', 'marcoafr@live.com', '21232f297a57a5a743894a0e4a801fc3', 'e3274be5c857fb42ab72d786e281b4b8', 0);

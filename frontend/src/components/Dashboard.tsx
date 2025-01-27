@@ -8,7 +8,10 @@ import {
   FormControl,
   MenuItem,
   Select,
-  InputLabel
+  InputLabel,
+  Button,
+  TextField,
+  Modal
 } from "@mui/material";
 import { dashboardService } from "../api/dashboardService";
 import { formatCurrency, formatArrayDate } from "../util/Util";
@@ -16,6 +19,9 @@ import { useAuth } from "../authenticationContext";
 import { creditCardService } from "../api/creditCardService";
 import { receivableService } from "../api/receivableService";
 import CardEntityDirective from "../directives/CardEntityDirective";
+import SyncAltIcon from '@mui/icons-material/SyncAlt';
+import BankDirective from "../directives/BankDirective";
+import { useSnackbar } from "../directives/snackbar/SnackbarContext";
 
 interface BankAccountBalance {
   id: number;
@@ -26,6 +32,7 @@ interface BankAccountBalance {
 
 const Dashboard = () => {
   const [bankAccounts, setBankAccounts] = useState<BankAccountBalance[]>([]);
+  const { showSnackbar } = useSnackbar(); // Usando o hook do Snackbar
   const { user } = useAuth();
   const [selectedCard, setSelectedCard] = useState<any>(null);
   const currentDate = new Date();
@@ -40,17 +47,46 @@ const Dashboard = () => {
   const [summarizedInfo, setSummarizedInfo] = useState<any[]>([]); // Estado para armazenar os dados da fatura
   const [receivablesByCategory, setReceivablesByCategory] = useState<any[]>([]);
 
+  const [transferOpenModal, setTransferOpenModal] = useState(false);
+  const [transferAmount, setTransferAmount] = useState<number>(0);
+  const [fromBank, setFromBank] = useState<number>(0);
+  const [toBank, setToBank] = useState<number>(0);
+
+  const handleTransferOpenModal = () => setTransferOpenModal(true);
+  const handleTransferCloseModal = () => setTransferOpenModal(false);
+  const handleConfirmTransferAmount = () => {
+    const filter = {
+      fromBankAccount: fromBank,
+      toBankAccount: toBank,
+      amount: transferAmount,
+      userId: user?.id
+    }
+
+    dashboardService
+      .bankTransfer(filter)
+      .then(() => {
+        setToBank(0);
+        setFromBank(0);
+        setTransferAmount(0);
+        setTransferOpenModal(false); // Armazena os dados recebidos
+        showSnackbar("Transferência computada!", "success");
+        fetchCurrentBalance();
+      }).catch((error) => {
+        showSnackbar("Não foi possível computar transferência!", "error");
+      });
+  }
+
+  const fetchCurrentBalance = async () => {
+    try {
+      const data = await dashboardService.currentBalance(user?.id);
+      setBankAccounts(data);
+    } catch (error) {
+      console.error("Erro ao buscar os saldos atuais:", error);
+    }
+  };
+
   // Fetch current balance
   useEffect(() => {
-    const fetchCurrentBalance = async () => {
-      try {
-        const data = await dashboardService.currentBalance(user?.id);
-        setBankAccounts(data);
-      } catch (error) {
-        console.error("Erro ao buscar os saldos atuais:", error);
-      }
-    };
-
     fetchCurrentBalance();
   }, [user]);
 
@@ -122,9 +158,20 @@ const Dashboard = () => {
           }}
         >
           <CardContent>
-            <Typography variant="h5" gutterBottom>
-              Saldo Atual
-            </Typography>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography variant="h5" gutterBottom>
+                Saldo Atual
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<SyncAltIcon />}
+                onClick={handleTransferOpenModal}
+                sx={{ marginLeft: 2 }}
+                size="small"
+              >
+                Transferir
+              </Button>
+            </Box>
             {bankAccounts.length > 0 ? (
               bankAccounts.map((account) => (
                 <Typography key={account.id}>
@@ -460,6 +507,71 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </Box>
+
+      <Modal open={transferOpenModal} onClose={handleTransferCloseModal}>
+        <Box p={3} bgcolor="white" borderRadius={2} mx="auto" my={5} width={400} maxWidth="80%">
+          <Typography variant="h4" gutterBottom>
+            Transferência
+          </Typography>
+
+          <FormControl fullWidth margin="normal">
+            <Typography variant="h6" sx={{mb: 1}}>
+              Origem:
+            </Typography>
+            <BankDirective 
+              value={fromBank}
+              onChange={(newBankValue) => {
+                setFromBank(Number(newBankValue));
+                setToBank(0);
+              }}
+              multiple={false} // Apenas uma seleção
+            />
+          </FormControl>
+
+          <FormControl fullWidth margin="normal">
+            <Typography variant="h6" sx={{mb: 1}}>
+              Destino:
+            </Typography>
+            <BankDirective
+              value={toBank}
+              onChange={(newBankValue) => {
+                if (Number(newBankValue) === fromBank) {
+                  showSnackbar("Banco destino não pode ser igual ao banco origem!", "warning");
+                  return; // Não altera o estado
+                }
+                setToBank(Number(newBankValue)); // Atualiza apenas se for diferente
+              }}
+              multiple={false} // Apenas uma seleção
+            />
+          </FormControl>
+
+          <FormControl fullWidth margin="normal">
+            <TextField
+              label="Valor (R$)"
+              fullWidth
+              type='number'
+              value={transferAmount}
+              onChange={(e) => {
+                const value = e.target.value;
+                // Limita a 2 casas decimais
+                const formattedValue = parseFloat(value).toFixed(2);
+                setTransferAmount(Number(formattedValue));
+              }}
+              margin="normal"
+            />
+          </FormControl>
+
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+            <Button onClick={handleTransferCloseModal} sx={{ marginRight: 1 }}>
+              Cancelar
+            </Button>
+            <Button variant="contained" color="primary" onClick={handleConfirmTransferAmount}>
+              Confirmar
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
+      
     </Container>
   );
 };
