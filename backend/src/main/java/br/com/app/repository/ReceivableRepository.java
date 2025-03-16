@@ -24,6 +24,8 @@ public interface ReceivableRepository extends JpaRepository<Receivable, Long>, R
 
     List<Receivable> findByBankAccountIdAndStatus(Long bankAccountId, Constants.TransactionStatus status);
 
+    List<Receivable> findByBankAccountIdAndStatusAndPaymentDateLessThanEqual(Long bankAccountId, Constants.TransactionStatus status, LocalDate paymentDate);
+
     @Query("SELECT r FROM Receivable r JOIN r.transaction t JOIN r.user u JOIN t.creditCard c JOIN t.category cat WHERE r.cardCompetenceDate BETWEEN :startDate AND :endDate AND u.id = :userId AND c.id = :creditCardId")
     List<Receivable> findByCardCompetenceDateBetweenAndCreditCardAndUserId(
             @Param("startDate") LocalDate startDate,

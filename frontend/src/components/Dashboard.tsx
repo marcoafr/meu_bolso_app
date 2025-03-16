@@ -11,7 +11,9 @@ import {
   InputLabel,
   Button,
   TextField,
-  Modal
+  Modal,
+  useTheme,
+  useMediaQuery
 } from "@mui/material";
 import { dashboardService } from "../api/dashboardService";
 import { formatCurrency, formatArrayDate } from "../util/Util";
@@ -22,6 +24,10 @@ import CardEntityDirective from "../directives/CardEntityDirective";
 import SyncAltIcon from '@mui/icons-material/SyncAlt';
 import BankDirective from "../directives/BankDirective";
 import { useSnackbar } from "../directives/snackbar/SnackbarContext";
+import NivoBarChart from "./NivoBarChart";
+import NivoPieChart from "./NivoPieChart";
+import { ShowChart } from "@mui/icons-material";
+import NivoLineChart from "./NivoLineChart";
 
 interface BankAccountBalance {
   id: number;
@@ -31,6 +37,8 @@ interface BankAccountBalance {
 }
 
 const Dashboard = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // Detecta se é mobile
   const [bankAccounts, setBankAccounts] = useState<BankAccountBalance[]>([]);
   const { showSnackbar } = useSnackbar(); // Usando o hook do Snackbar
   const { user } = useAuth();
@@ -51,6 +59,10 @@ const Dashboard = () => {
   const [transferAmount, setTransferAmount] = useState<number>(0);
   const [fromBank, setFromBank] = useState<number>(0);
   const [toBank, setToBank] = useState<number>(0);
+
+  const [heritageEvolutionOpenModal, setHeritageEvolutionOpenModal] = useState(false);
+  const [heritageEvolutionFilter, setHeritageEvolutionFilter] = useState(3);
+  const [heritageEvolutionResults, setHeritageEvolutionResults] = useState<any[]>([]);
 
   const handleTransferOpenModal = () => setTransferOpenModal(true);
   const handleTransferCloseModal = () => setTransferOpenModal(false);
@@ -75,6 +87,32 @@ const Dashboard = () => {
         showSnackbar("Não foi possível computar transferência!", "error");
       });
   }
+
+  const handleHeritageEvolutionOpenModal = () => {
+    setHeritageEvolutionOpenModal(true)
+    fetchHeritageEvolution(heritageEvolutionFilter);
+  };
+  const handleHeritageEvolutionCloseModal = () => setHeritageEvolutionOpenModal(false);
+  const fetchHeritageEvolution = async (monthsAmount: number) => {
+    try {
+      const data = await dashboardService.heritageEvolution({
+        userId: user?.id,
+        monthsAmount: monthsAmount, // Passa 3 ou 6
+      });
+      const chartData = processDataForChart(data);
+      setHeritageEvolutionResults(chartData);
+      // Tratar o retorno aqui, se necessário
+    } catch (error) {
+      console.error("Erro ao buscar a evolução patrimonial:", error);
+    }
+  };
+
+
+  const handleHeritageEvolutionFilterChange = (event) => {
+    const newFilterValue = Number(event.target.value); // Captura o valor 3 ou 6
+    setHeritageEvolutionFilter(newFilterValue);
+    fetchHeritageEvolution(newFilterValue); // Chama o método passando o valor 3 ou 6
+  };
 
   const fetchCurrentBalance = async () => {
     try {
@@ -105,7 +143,7 @@ const Dashboard = () => {
           userId: user?.id,
         }).then((data) => {
           if (data.length > 0) {
-            data.forEach((r) => {
+            data.forEach((r: any) => {
               r.competenceDate = r.competenceDate ? formatArrayDate(r.competenceDate) : "";
               r.metadata = r.metadata ? JSON.parse(r.metadata) : {};
             });
@@ -142,6 +180,54 @@ const Dashboard = () => {
     setExpenseFilter((prev) => ({ ...prev, [field]: value }));
   };
 
+  const pieChartData = summarizedInfo
+  .filter((item) => item.status === 0 || item.status === 1) // Apenas Pendente ou Pago
+  .reduce<{ [key: string]: number }>((acc, item) => {
+    const category = item.transactionDTO.categoryDTO.name;
+    const amount = Number(item.amount) || 0; // Garante que é número
+    acc[category] = (acc[category] || 0) + amount;
+    return acc;
+  }, {});
+
+  const formattedPieChartData = Object.entries(pieChartData).map(([key, value]) => ({
+    id: key,
+    label: key,
+    value: value,
+  }));
+
+  // Função para processar os dados recebidos para o gráfico
+  const processDataForChart = (heritageEvolutionResults: any[]) => {
+    const data = [];
+
+    // Iterar sobre cada item de período e agrupar os saldos por conta
+    heritageEvolutionResults.forEach((result) => {
+      const date = result.periodDate.join('-'); // Transformar a data em uma string no formato YYYY-MM-DD
+      
+      result.bankAccountsBalances.forEach((account) => {
+        // Verificar se já existe uma linha para a conta
+        let accountData = data.find(d => d.id === account.accountName);
+
+        if (!accountData) {
+          // Se não existir, cria a estrutura inicial para a conta
+          accountData = {
+            id: account.accountName,
+            color: account.accountColor,
+            data: []
+          };
+          data.push(accountData);
+        }
+
+        // Adicionar o saldo da conta para o período atual
+        accountData.data.push({
+          x: date, // Data como eixo X
+          y: account.balanceAtPeriod // Saldo da conta no eixo Y
+        });
+      });
+    });
+
+    return data;
+  };
+
   return (
     <Container>
       <Box>
@@ -170,6 +256,15 @@ const Dashboard = () => {
                 size="small"
               >
                 Transferir
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<ShowChart />}
+                onClick={handleHeritageEvolutionOpenModal}
+                sx={{ marginLeft: 2 }}
+                size="small"
+              >
+                Evolução Patrimonial
               </Button>
             </Box>
             {bankAccounts.length > 0 ? (
@@ -247,6 +342,13 @@ const Dashboard = () => {
               </FormControl>
             </Box>
 
+            {/* Gráfico de Barras Horizontais */}
+            {formattedPieChartData.length > 0 && (
+              <Box sx={{ marginTop: 2, height: "400px" }}>
+                <NivoPieChart data={formattedPieChartData} />
+              </Box>
+            )}
+
             {/* Tabela transformada em uma lista para mobile */}
             {summarizedInfo.length > 0 ? (
               <>
@@ -287,7 +389,7 @@ const Dashboard = () => {
                             : r.status === 1
                             ? "Pago"
                             : r.status === 3
-                            ? "Pendente"
+                            ? "Cancelado"
                             : r.status === 4
                             ? "Deletado"
                             : "Desconhecido"}
@@ -405,6 +507,13 @@ const Dashboard = () => {
                 </Select>
               </FormControl>
             </Box>
+
+            {/* Gráfico de Barras Horizontais */}
+            {receivablesByCategory.length > 0 && (
+              <Box sx={{ marginTop: 2, height: "400px" }}>
+                <NivoBarChart data={receivablesByCategory} />
+              </Box>
+            )}
 
             {/* Exibição da Tabela com Recebíveis por Categoria */}
             {receivablesByCategory.length > 0 ? (
@@ -567,6 +676,58 @@ const Dashboard = () => {
             </Button>
             <Button variant="contained" color="primary" onClick={handleConfirmTransferAmount}>
               Confirmar
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
+
+      <Modal open={heritageEvolutionOpenModal} onClose={handleHeritageEvolutionCloseModal}>
+        <Box
+          p={3}
+          bgcolor="white"
+          borderRadius={2}
+          mx="auto"
+          my={5}
+          width={isMobile ? "100vw" : 1200}
+          maxWidth="80%"
+          maxHeight="80%"
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          overflow="auto"
+        >
+          <FormControl fullWidth margin="normal">
+            <InputLabel id="fetch-heritage-evolution">Selecione o período</InputLabel>
+            <Select
+              labelId="fetch-heritage-evolution"
+              value={heritageEvolutionFilter}
+              onChange={handleHeritageEvolutionFilterChange}
+            >
+              <MenuItem value={3}>Últimos 3 meses</MenuItem>
+              <MenuItem value={6}>Últimos 6 meses</MenuItem>
+            </Select>
+          </FormControl>
+
+          {/* Gráfico de Linhas com rotação no Mobile */}
+          <Box
+            sx={{
+              width: "100%",
+              height: "80%",
+              transform: isMobile ? "rotate(90deg)" : "none",
+              transformOrigin: "center",
+              overflow: "hidden",
+            }}
+          >
+            {heritageEvolutionResults.length > 0 ? (
+              <NivoLineChart data={heritageEvolutionResults} />
+            ) : (
+              <Typography>Nenhum dado encontrado para o período selecionado.</Typography>
+            )}
+          </Box>
+
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+            <Button onClick={handleHeritageEvolutionCloseModal} sx={{ marginRight: 1 }}>
+              Fechar
             </Button>
           </Box>
         </Box>

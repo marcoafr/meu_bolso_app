@@ -2,6 +2,8 @@ package br.com.app.controller;
 
 import br.com.app.dto.BankAccountResponseDTO;
 import br.com.app.dto.BankTransferDTO;
+import br.com.app.dto.HeritageEvolutionRequestDTO;
+import br.com.app.dto.HeritageEvolutionResponseDTO;
 import br.com.app.model.BankAccount;
 import br.com.app.model.Receivable;
 import br.com.app.model.User;
@@ -17,7 +19,10 @@ import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -74,6 +79,86 @@ public class DashboardController {
                         .add(totalTransferInReceivables)
             );
         }).collect(Collectors.toList());
+    }
+
+    @PostMapping("/heritageEvolution")
+    public List<HeritageEvolutionResponseDTO> findHeritageEvolutionByUserIdAndMonthsAmount(@RequestBody HeritageEvolutionRequestDTO heritageEvolutionRequestDTO) {
+        Long userId = heritageEvolutionRequestDTO.getUserId();
+        int monthsAmount = heritageEvolutionRequestDTO.getMonthsAmount();
+
+        // Buscar todas as contas bancárias do usuário com status ACTIVE
+        List<BankAccount> activeBankAccounts = bankAccountRepository.findByUserIdAndStatus(userId, Constants.Status.ACTIVE);
+
+        // Calcular as "fotografias" de saldos em cada período de 15 dias
+        Map<LocalDate, List<HeritageEvolutionResponseDTO>> groupedResults = new HashMap<>();
+        LocalDate currentDate = LocalDate.now();
+
+        // Gerar os períodos de 15 em 15 dias retrocedendo
+        for (int i = 0; i < monthsAmount * 2; i++) { // *2 porque são 2 períodos por mês (15 dias de cada vez)
+            LocalDate period = currentDate.minusDays(15 * i);
+
+            // Para cada período, calcular os saldos das contas bancárias
+            for (BankAccount account : activeBankAccounts) {
+                // Calcular o total de receivables pagas para esta conta no período
+                BigDecimal totalPaidReceivables = receivableRepository
+                    .findByBankAccountIdAndStatusAndPaymentDateLessThanEqual(account.getId(), Constants.TransactionStatus.PAID, period)
+                    .stream()
+                    .map(receivable -> {
+                        BigDecimal amount = receivable.getPaidAmount();
+                        Constants.CategoryType type = receivable.getTransaction().getCategory().getType();
+                        return type == Constants.CategoryType.RECEIPT ? amount.negate() : amount; // Subtrai se for RECEIPT, soma se for EXPENSE
+                    })
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                BigDecimal totalTransferInReceivables = transferRepository
+                    .findByBankAccountToIdAndDateLessThanEqual(account.getId(), period)
+                    .stream()
+                    .map(Transfer::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                BigDecimal totalTransferOutReceivables = transferRepository
+                    .findByBankAccountFromIdAndDateLessThanEqual(account.getId(), period)
+                    .stream()
+                    .map(Transfer::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                // Criar um DTO com o saldo atualizado para esse período
+                HeritageEvolutionResponseDTO dto = new HeritageEvolutionResponseDTO(
+                        account.getId(),
+                        account.getName(),
+                        account.getColor(),
+                        account.getInitialAmount()
+                            .subtract(totalPaidReceivables)
+                            .subtract(totalTransferOutReceivables)
+                            .add(totalTransferInReceivables),
+                        period
+                );
+
+                // Agrupar os resultados por período
+                groupedResults.computeIfAbsent(period, k -> new ArrayList<>()).add(dto);
+            }
+        }
+
+        // Agora converter o Map em uma lista de objetos agrupados por período
+        List<HeritageEvolutionResponseDTO> result = new ArrayList<>();
+        for (Map.Entry<LocalDate, List<HeritageEvolutionResponseDTO>> entry : groupedResults.entrySet()) {
+            LocalDate period = entry.getKey();
+            List<HeritageEvolutionResponseDTO> bankAccountsBalances = entry.getValue();
+
+            // Criar um novo DTO para o período com a lista de saldos das contas
+            HeritageEvolutionResponseDTO periodDTO = new HeritageEvolutionResponseDTO(
+                    null, // Não é necessário o id da conta aqui, pois estamos agrupando por período
+                    null, // Não é necessário o nome da conta aqui, pois estamos agrupando por período
+                    null, // Não é necessário a cor da conta aqui, pois estamos agrupando por período
+                    null, // Não é necessário o saldo total aqui, pois estamos agrupando por período
+                    period
+            );
+            periodDTO.setBankAccountsBalances(bankAccountsBalances); // A lista de saldos das contas para o período
+
+            result.add(periodDTO); // Adicionar o DTO agrupado à lista final
+        }
+
+        return result;
     }
 
     @PostMapping("/bankTransfer")

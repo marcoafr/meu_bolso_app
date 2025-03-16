@@ -1,6 +1,9 @@
 # Environment Variables
 *.env
 
+# React
+node_modules/
+
 # Node.js
 /frontend/node_modules/
 /dist/

@@ -7,7 +7,7 @@ WORKDIR /app
 # Etapa 3: Copiar arquivos e instalar dependências
 COPY package*.json ./
 RUN npm install
-RUN npm install @mui/material @mui/icons-material @emotion/react @emotion/styled react-router-dom react-color
+RUN npm install @mui/material @mui/icons-material @emotion/react @emotion/styled react-router-dom react-color @nivo/bar @nivo/pie @nivo/line
 
 # Etapa 4: Copiar o restante do código
 COPY . .
