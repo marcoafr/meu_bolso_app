@@ -99,6 +99,12 @@ const Dashboard = () => {
         userId: user?.id,
         monthsAmount: monthsAmount, // Passa 3 ou 6
       });
+      data.sort((a: any, b: any) => {
+        const dateA = a.periodDate;
+        const dateB = b.periodDate;
+        
+        return dateA[0] - dateB[0] || dateA[1] - dateB[1] || dateA[2] - dateB[2];
+      });
       const chartData = processDataForChart(data);
       setHeritageEvolutionResults(chartData);
       // Tratar o retorno aqui, se necessário
