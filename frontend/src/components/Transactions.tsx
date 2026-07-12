@@ -1,4 +1,28 @@
-import { Typography, Container, Box, Button, Grid, Card, CardContent, IconButton, Tooltip, Chip, Menu, MenuItem, Select, InputLabel, FormControl, CircularProgress, TextField, Modal, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
+import {
+  Typography,
+  Container,
+  Box,
+  Button,
+  Grid,
+  Card,
+  CardContent,
+  IconButton,
+  Tooltip,
+  Chip,
+  Menu,
+  MenuItem,
+  CircularProgress,
+  TextField,
+  Modal,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Paper,
+  Stack,
+  Divider,
+} from "@mui/material";
 import { useState } from "react";
 import DateDirective from "../directives/DateDirective";
 import CategoryDirective from "../directives/CategoryDirective";
@@ -6,7 +30,14 @@ import CardDirective from "../directives/CardDirective";
 import BankDirective from "../directives/BankDirective";
 import PaymentStatusDirective from "../directives/PaymentStatusDirective";
 import { receivableService } from "../api/receivableService";
-import { Check, Edit, Clear, Delete } from "@mui/icons-material";
+import {
+  Check,
+  Edit,
+  Clear,
+  Delete,
+  FilterListRounded,
+  SortRounded,
+} from "@mui/icons-material";
 import { formatCurrency, formatDate, formatArrayDate } from "../util/Util";
 import { useSnackbar } from "../directives/snackbar/SnackbarContext";
 import TransactionTypeDirective from "../directives/TransactionTypeDirective";
@@ -14,18 +45,19 @@ import CategoryEntityDirective from "../directives/CategoryEntityDirective";
 import { useAuth } from "../authenticationContext";
 
 const Transactions = () => {
-  const { showSnackbar } = useSnackbar(); // Usando o hook do Snackbar
-  const { user } = useAuth(); // Pegando o usuário autenticado
+  const { showSnackbar } = useSnackbar();
+  const { user } = useAuth();
+
   const [filters, setFilters] = useState(() => {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
 
-    const formatDate = (date: Date) => date.toISOString().split("T")[0];
+    const formatLocalDate = (date: Date) => date.toISOString().split("T")[0];
 
     return {
-      from: formatDate(yesterday),
-      to: formatDate(today),
+      from: formatLocalDate(yesterday),
+      to: formatLocalDate(today),
       transactionType: null as number | null,
       categories: [] as number[],
       bankAccounts: [] as number[],
@@ -35,67 +67,61 @@ const Transactions = () => {
     };
   });
 
-  const [transactions, setTransactions] = useState<any[]>([]); // Armazena as transações
-  const [sortOption, setSortOption] = useState<string>("dataD"); // Estado para armazenar a opção de classificação
-  const [loading, setLoading] = useState<boolean>(false); // Estado para controle de loading
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null); // Estado para controle do Menu
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [sortOption, setSortOption] = useState<string>("dataD");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-  // Modal Liquidação
-  const [openModalLiquidation, setOpenModalLiquidation] = useState<boolean>(false); // Controla a exibição do modal
-  const [selectedReceivableLiquidation, setSelectedReceivableLiquidation] = useState<number | null>(null); // Armazena o banco selecionado
-  const [selectedBankAccountLiquidation, setSelectedBankAccountLiquidation] = useState<number | null>(null); // Armazena o banco selecionado
-  const [paymentDateLiquidation, setPaymentDateLiquidation] = useState(new Date().toISOString().split("T")[0]); // Data de pagamento padrão (hoje)
+  const [openModalLiquidation, setOpenModalLiquidation] = useState<boolean>(false);
+  const [selectedReceivableLiquidation, setSelectedReceivableLiquidation] = useState<number | null>(null);
+  const [selectedBankAccountLiquidation, setSelectedBankAccountLiquidation] = useState<number | null>(null);
+  const [paymentDateLiquidation, setPaymentDateLiquidation] = useState(new Date().toISOString().split("T")[0]);
 
-  // Modal Edição
   const [openEditModal, setOpenEditModal] = useState(false);
   const [editData, setEditData] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dialogMessages, setDialogMessages] = useState<string[]>([]);
 
-  // Modal Cancelar ou Deletar
-  const [openCancelDialog, setOpenCancelDialog] = useState(false); // Estado para controlar o dialog de cancelamento
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false); // Estado para controlar o dialog de deleção
-  const [selectedTransactionCancelDelete, setSelectedTransactionCancelDelete] = useState<any>(null); // Armazena o ID da transação selecionada para cancelar ou deletar
-  
-  // Função que será chamada ao clicar em "Cancelar"
-  const handleCancel = (recei) => {
-    setSelectedTransactionCancelDelete(recei); // Armazena o ID da transação a ser cancelada
-    setOpenCancelDialog(true); // Abre o diálogo de cancelamento
+  const [openCancelDialog, setOpenCancelDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [selectedTransactionCancelDelete, setSelectedTransactionCancelDelete] = useState<any>(null);
+
+  const handleCancel = (recei: any) => {
+    setSelectedTransactionCancelDelete(recei);
+    setOpenCancelDialog(true);
   };
-  
-  // Função que será chamada ao clicar em "Deletar"
-  const handleDelete = (recei) => {
-    setSelectedTransactionCancelDelete(recei); // Armazena o ID da transação a ser deletada
-    setOpenDeleteDialog(true); // Abre o diálogo de deleção
+
+  const handleDelete = (recei: any) => {
+    setSelectedTransactionCancelDelete(recei);
+    setOpenDeleteDialog(true);
   };
-  
-  // Confirmar o cancelamento
+
   const confirmCancel = () => {
     receivableService
-      .cancelReceivable(selectedTransactionCancelDelete!.id) // Chama a função de cancelamento
+      .cancelReceivable(selectedTransactionCancelDelete!.id)
       .then(() => {
         showSnackbar("Transação cancelada com sucesso!", "success");
-        setOpenCancelDialog(false); // Fecha o dialog de cancelamento
-        handleSearch(); // Atualiza a lista de transações
-      }).catch(() => {
+        setOpenCancelDialog(false);
+        handleSearch();
+      })
+      .catch(() => {
         showSnackbar("Erro ao cancelar transação", "error");
       });
   };
-  
-  // Confirmar a deleção
+
   const confirmDelete = () => {
     receivableService
-      .deleteReceivable(selectedTransactionCancelDelete!.id) // Chama a função de cancelamento
+      .deleteReceivable(selectedTransactionCancelDelete!.id)
       .then(() => {
         showSnackbar("Transação deletada com sucesso!", "success");
-        setOpenDeleteDialog(false); // Fecha o dialog de cancelamento
-        handleSearch(); // Atualiza a lista de transações
-      }).catch(() => {
+        setOpenDeleteDialog(false);
+        handleSearch();
+      })
+      .catch(() => {
         showSnackbar("Erro ao deletar transação", "error");
       });
   };
-  
-  // Fechar o dialog de cancelamento ou deleção
+
   const closeDialogCancelDelete = () => {
     setOpenCancelDialog(false);
     setOpenDeleteDialog(false);
@@ -110,118 +136,147 @@ const Transactions = () => {
 
   const handleSearch = () => {
     setLoading(true);
+
     receivableService
       .getAnalyticalListReceivableByUserId(filters)
       .then((data) => {
-        // Ordenar os dados por competenceDate (mais novo para mais velho)
         const sortedData = data.sort(
           (a: any, b: any) =>
             new Date(b.competenceDate).getTime() - new Date(a.competenceDate).getTime()
         );
 
-        // Percorrer os resultados e verificar se o .metadata não é null ou vazio
         const processedData = sortedData.map((item: any) => {
           if (item.metadata) {
             try {
-              // Converter o .metadata de string JSON para objeto
               item.metadata = JSON.parse(item.metadata);
             } catch (error) {
-              console.error('Erro ao parsear o metadata:', error);
-              // Caso o JSON esteja malformado, você pode definir item.metadata como um objeto vazio ou deixá-lo como está
+              console.error("Erro ao parsear metadata:", error);
               item.metadata = {};
             }
           }
           return item;
         });
 
-        setTransactions(processedData); // Salva as transações no estado
+        setTransactions(processedData);
       })
       .catch(() => {
         showSnackbar("Erro ao buscar transações", "error");
       })
       .finally(() => {
-        setLoading(false); // Desativa o estado de loading após a busca
+        setLoading(false);
       });
   };
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget); // Abre o menu
+    setAnchorEl(event.currentTarget);
   };
 
   const handleMenuClose = (value: string) => {
-    setSortOption(value); // Atualiza a opção de classificação
-    setAnchorEl(null); // Fecha o menu
-    handleSort(value); // Chama a função de ordenação
+    setSortOption(value);
+    setAnchorEl(null);
+    handleSort(value);
   };
 
-  const handleSort = (sortOption: string) => {
+  const handleSort = (sortValue: string) => {
     let sortedData = [...transactions];
 
-    switch (sortOption) {
-        case "dataC": // Ordenar por data crescente
-            sortedData.sort((a: any, b: any) =>
-                new Date(a.competenceDate).getTime() - new Date(b.competenceDate).getTime()
-            );
-            break;
-        case "dataD": // Ordenar por data decrescente
-            sortedData.sort((a: any, b: any) =>
-                new Date(b.competenceDate).getTime() - new Date(a.competenceDate).getTime()
-            );
-            break;
-        case "valorC": // Ordenar por valor crescente
-            sortedData.sort((a: any, b: any) => a.amount - b.amount);
-            break;
-        case "valorD": // Ordenar por valor decrescente
-            sortedData.sort((a: any, b: any) => b.amount - a.amount);
-            break;
-        case "categoriaC": // Ordenar por categoria crescente
-            sortedData.sort((a: any, b: any) =>
-                a.transactionDTO.categoryName.localeCompare(b.transactionDTO.categoryName)
-            );
-            break;
-        case "categoriaD": // Ordenar por categoria decrescente
-            sortedData.sort((a: any, b: any) =>
-                b.transactionDTO.categoryName.localeCompare(a.transactionDTO.categoryName)
-            );
-            break;
-        default:
-            break;
+    switch (sortValue) {
+      case "dataC":
+        sortedData.sort(
+          (a: any, b: any) =>
+            new Date(a.competenceDate).getTime() - new Date(b.competenceDate).getTime()
+        );
+        break;
+      case "dataD":
+        sortedData.sort(
+          (a: any, b: any) =>
+            new Date(b.competenceDate).getTime() - new Date(a.competenceDate).getTime()
+        );
+        break;
+      case "valorC":
+        sortedData.sort((a: any, b: any) => a.amount - b.amount);
+        break;
+      case "valorD":
+        sortedData.sort((a: any, b: any) => b.amount - a.amount);
+        break;
+      case "categoriaC":
+        sortedData.sort((a: any, b: any) =>
+          a.transactionDTO.categoryName.localeCompare(b.transactionDTO.categoryName)
+        );
+        break;
+      case "categoriaD":
+        sortedData.sort((a: any, b: any) =>
+          b.transactionDTO.categoryName.localeCompare(a.transactionDTO.categoryName)
+        );
+        break;
+      default:
+        break;
     }
 
-    setTransactions(sortedData); // Atualiza a lista de transações
+    setTransactions(sortedData);
   };
 
-  const getStatusColor = (status: number) => {
+  const getStatusLabel = (status: number) => {
     switch (status) {
       case 0:
-        return "orange"; // Pendente
+        return "Pendente";
       case 1:
-        return "green"; // Pago
+        return "Pago";
       case 3:
-        return "red"; // Cancelado
+        return "Cancelado";
       default:
-        return "gray"; // Desconhecido
+        return "Desconhecido";
+    }
+  };
+
+  const getStatusStyles = (status: number) => {
+    switch (status) {
+      case 0:
+        return {
+          color: "#b45309",
+          backgroundColor: "#fef3c7",
+        };
+      case 1:
+        return {
+          color: "#166534",
+          backgroundColor: "#dcfce7",
+        };
+      case 3:
+        return {
+          color: "#b91c1c",
+          backgroundColor: "#fee2e2",
+        };
+      default:
+        return {
+          color: "#475569",
+          backgroundColor: "#e2e8f0",
+        };
     }
   };
 
   const handleLiquidate = (receivable: any) => {
-    setSelectedReceivableLiquidation(receivable.id); // Armazena o id da transação
-    setSelectedBankAccountLiquidation(receivable.bankId); // Reseta o banco selecionado
-    setPaymentDateLiquidation(new Date().toISOString().split("T")[0]); // Define a data de pagamento como hoje
-    setOpenModalLiquidation(true); // Abre o modal
+    setSelectedReceivableLiquidation(receivable.id);
+    setSelectedBankAccountLiquidation(receivable.bankId);
+    setPaymentDateLiquidation(new Date().toISOString().split("T")[0]);
+    setOpenModalLiquidation(true);
   };
 
   const handleModalCloseLiquidation = () => {
-    setOpenModalLiquidation(false); // Fecha o modal
-    setSelectedBankAccountLiquidation(null); // Reseta o banco selecionado
+    setOpenModalLiquidation(false);
+    setSelectedBankAccountLiquidation(null);
   };
-  
+
   const handleConfirmLiquidation = () => {
     if (selectedBankAccountLiquidation && paymentDateLiquidation) {
-      receivableService.liquidate({receivableId: selectedReceivableLiquidation, bankAccountId: selectedBankAccountLiquidation, paymentDate: paymentDateLiquidation})
+      receivableService
+        .liquidate({
+          receivableId: selectedReceivableLiquidation,
+          bankAccountId: selectedBankAccountLiquidation,
+          paymentDate: paymentDateLiquidation,
+        })
         .then(() => {
           showSnackbar("Liquidação realizada com sucesso", "success");
-          handleModalCloseLiquidation(); // Fecha o modal após a liquidação
+          handleModalCloseLiquidation();
           handleSearch();
         })
         .catch(() => {
@@ -233,54 +288,51 @@ const Transactions = () => {
   const handleEdit = (receivable: any) => {
     setEditData({
       ...receivable,
-      /*
-      transactionDTO: {
-        ...receivable.transactionDTO, 
-        categoryDTO: {
-          ...receivable.transactionDTO.categoryDTO
-        }
-      },
-      */
       updatedAmount: receivable.amount,
-      updatedCategory: {...receivable.transactionDTO.categoryDTO},
+      updatedCategory: { ...receivable.transactionDTO.categoryDTO },
       originalCategoryName: receivable.transactionDTO.categoryDTO.name,
       updatedCompetenceDate: receivable.competenceDate,
     });
     setOpenEditModal(true);
   };
-  
+
   const handleEditSave = () => {
     const messages = [];
-    console.log("editData", editData)
+
     if (editData.amount !== editData.updatedAmount) {
       messages.push(
-        `Alterar valor de R$ ${formatCurrency(editData.amount)} para R$ ${formatCurrency(editData.updatedAmount)}.`
+        `Alterar valor de R$ ${formatCurrency(editData.amount)} para R$ ${formatCurrency(
+          editData.updatedAmount
+        )}.`
       );
     }
+
     if (editData.transactionDTO.categoryDTO.id !== editData.updatedCategory.id) {
       messages.push(
         `Alterar categoria de "${editData.transactionDTO.categoryDTO.name}" para "${editData.updatedCategory.name}". Isso irá alterar a categoria de todas as parcelas dessa compra, caso seja parcelada.`
       );
     }
+
     if (editData.competenceDate !== editData.updatedCompetenceDate) {
       messages.push(
-        `Alterar data de competência de ${formatDate(editData.competenceDate)} para ${formatDate(editData.updatedCompetenceDate)}.`
+        `Alterar data de competência de ${formatDate(editData.competenceDate)} para ${formatDate(
+          editData.updatedCompetenceDate
+        )}.`
       );
     }
-  
+
     if (messages.length > 0) {
       setDialogMessages(messages);
-      setIsDialogOpen(true); // Abre o Dialog
+      setIsDialogOpen(true);
     } else {
       showSnackbar("Nenhuma alteração foi feita.", "info");
     }
-  };  
+  };
 
-  // Função para confirmar a alteração
   const confirmEdit = () => {
     receivableService
       .updateReceivable({
-        receivableId: editData.id, 
+        receivableId: editData.id,
         amount: editData.updatedAmount,
         categoryId: editData.updatedCategory.id,
         competenceDate: editData.updatedCompetenceDate,
@@ -288,14 +340,14 @@ const Transactions = () => {
       .then(() => {
         showSnackbar("Alterações salvas com sucesso!", "success");
         setOpenEditModal(false);
-        handleSearch(); // Atualize a lista de transações
+        handleSearch();
       })
       .catch(() => {
         showSnackbar("Erro ao salvar alterações.", "error");
       })
-      .finally(() => setIsDialogOpen(false)); // Fecha o Dialog após a confirmação
+      .finally(() => setIsDialogOpen(false));
   };
-  
+
   const handleEditClose = () => {
     setOpenEditModal(false);
   };
@@ -304,343 +356,591 @@ const Transactions = () => {
     return (
       transaction &&
       transaction.metadata &&
-      'installment' in transaction.metadata &&
-      'total_installments' in transaction.metadata
+      "installment" in transaction.metadata &&
+      "total_installments" in transaction.metadata
     );
-  };  
+  };
+
+  const sectionCardStyle = {
+    p: { xs: 2.5, md: 3 },
+    borderRadius: "24px",
+    border: "1px solid rgba(15, 23, 42, 0.08)",
+    backgroundColor: "#ffffff",
+    boxShadow: "0 10px 30px rgba(15, 23, 42, 0.04)",
+  };
 
   return (
-    <Container>
-      <Box>
-        <Typography variant="h4" align="center" gutterBottom>
-          Transações
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
-            <DateDirective
-              initialDates={{ from: filters.from, to: filters.to }}
-              onChange={(dates) => {
-                handleFilterChange("from", dates.from);
-                handleFilterChange("to", dates.to);
-              }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TransactionTypeDirective
-              value={filters.transactionType!}
-              onChange={(value) => handleFilterChange("transactionType", value)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <CategoryDirective
-              value={filters.categories}
-              multiple
-              onChange={(value) => handleFilterChange("categories", value)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <BankDirective
-              value={filters.bankAccounts}
-              multiple
-              onChange={(value) => handleFilterChange("bankAccounts", value)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <CardDirective
-              value={filters.creditCards}
-              multiple
-              onChange={(value) => handleFilterChange("creditCards", value)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <PaymentStatusDirective
-              value={filters.status}
-              multiple
-              onChange={(value) => handleFilterChange("status", value)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSearch}
-              disabled={loading}
+    <Box
+      sx={{
+        minHeight: "100vh",
+        background: "#f8fafc",
+        py: { xs: 4, md: 5 },
+      }}
+    >
+      <Container maxWidth="xl">
+        <Box sx={{ mb: 4 }}>
+          <Typography
+            sx={{
+              color: "primary.main",
+              fontWeight: 700,
+              fontSize: "0.82rem",
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              mb: 1,
+            }}
+          >
+            Financeiro
+          </Typography>
+
+          <Typography
+            sx={{
+              fontSize: { xs: "2rem", md: "2.5rem" },
+              fontWeight: 800,
+              color: "#0f172a",
+              lineHeight: 1.1,
+              mb: 1.2,
+            }}
+          >
+            Transações
+          </Typography>
+
+          <Typography
+            sx={{
+              color: "#64748b",
+              fontSize: { xs: "0.98rem", md: "1.02rem" },
+              lineHeight: 1.7,
+              maxWidth: "780px",
+            }}
+          >
+            Filtre, consulte e gerencie suas transações com mais clareza, incluindo
+            ações rápidas para editar, liquidar, cancelar ou excluir lançamentos.
+          </Typography>
+        </Box>
+
+        <Paper elevation={0} sx={{ ...sectionCardStyle, mb: 3 }}>
+          <Stack spacing={3}>
+            <Box>
+              <Typography sx={{ fontSize: "1.1rem", fontWeight: 700, color: "#0f172a", mb: 0.5 }}>
+                Filtros
+              </Typography>
+              <Typography sx={{ color: "#64748b", fontSize: "0.95rem" }}>
+                Refine sua busca por período, tipo, categoria, conta, cartão e status.
+              </Typography>
+            </Box>
+
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6} lg={4}>
+                <DateDirective
+                  initialDates={{ from: filters.from, to: filters.to }}
+                  onChange={(dates) => {
+                    handleFilterChange("from", dates.from);
+                    handleFilterChange("to", dates.to);
+                  }}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={6} lg={4}>
+                <TransactionTypeDirective
+                  value={filters.transactionType!}
+                  onChange={(value) => handleFilterChange("transactionType", value)}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={6} lg={4}>
+                <CategoryDirective
+                  value={filters.categories}
+                  multiple
+                  onChange={(value) => handleFilterChange("categories", value)}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={6} lg={4}>
+                <BankDirective
+                  value={filters.bankAccounts}
+                  multiple
+                  onChange={(value) => handleFilterChange("bankAccounts", value)}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={6} lg={4}>
+                <CardDirective
+                  value={filters.creditCards}
+                  multiple
+                  onChange={(value) => handleFilterChange("creditCards", value)}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={6} lg={4}>
+                <PaymentStatusDirective
+                  value={filters.status}
+                  multiple
+                  onChange={(value) => handleFilterChange("status", value)}
+                />
+              </Grid>
+            </Grid>
+
+            <Divider />
+
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              justifyContent="space-between"
+              alignItems={{ xs: "stretch", sm: "center" }}
             >
-              {loading ? <CircularProgress size={24} color="inherit" /> : "Pesquisar"}
-            </Button>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={handleMenuClick}
-              style={{ marginLeft: "10px" }}
-              disabled={loading || transactions.length === 0}
-            >
-              Classificar: 
-              {
-                sortOption === "dataC" ? "Data (C.)" : 
-                sortOption === "dataD" ? "Data (D.)" : 
-                sortOption === "valorC" ? "Valor (C.)" : 
-                sortOption === "valorD" ? "Valor (D.)" : 
-                sortOption === "categoriaC" ? "Categoria (C.)" : 
-                "Categoria (D.)"
-              }
-            </Button>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={() => setAnchorEl(null)}
-            >
-              <MenuItem onClick={() => handleMenuClose("dataC")}>Data Crescente</MenuItem>
-              <MenuItem onClick={() => handleMenuClose("dataD")}>Data Decrescente</MenuItem>
-              <MenuItem onClick={() => handleMenuClose("valorC")}>Valor Crescente</MenuItem>
-              <MenuItem onClick={() => handleMenuClose("valorD")}>Valor Decrescente</MenuItem>
-              <MenuItem onClick={() => handleMenuClose("categoriaC")}>Categoria Crescente</MenuItem>
-              <MenuItem onClick={() => handleMenuClose("categoriaD")}>Categoria Decrescente</MenuItem>
-            </Menu>
-          </Grid>
-        </Grid>
-      </Box>
-      <Box mt={4}>
-        <Grid container spacing={2}>
-          {transactions.map((r) => (
-            <Grid item xs={12} sm={6} key={r.id}>
-              <Card
+              <Button
+                variant="contained"
+                onClick={handleSearch}
+                disabled={loading}
+                startIcon={
+                  loading ? <CircularProgress size={18} color="inherit" /> : <FilterListRounded />
+                }
                 sx={{
-                  backgroundColor: r.transactionDTO.categoryDTO.type === 0 ? "#e8f5e9" : "#ffebee", // Verde claro para receita, vermelho claro para despesa
-                  borderRadius: 2,
-                  boxShadow: 2,
+                  minHeight: 48,
+                  borderRadius: "14px",
+                  textTransform: "none",
+                  fontWeight: 700,
+                  px: 2.5,
+                  boxShadow: "none",
                 }}
               >
-                <CardContent>
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Chip
-                      label={r.transactionDTO.categoryDTO.type === 0 ? "RECEITA" : "DESPESA"}
-                      color={r.transactionDTO.categoryDTO.type === 0 ? "success" : "error"}
-                      variant="outlined"
-                    />
-                    <Typography variant="body1" color={getStatusColor(r.status)} sx={{ml: 2, fontWeight: 'bold'}}>
-                      Status: {r.status === 0 ? "Pendente" : r.status === 1 ? "Pago" : "Cancelado"}
-                    </Typography>
-                    <Typography variant="body1" color="textSecondary" textAlign="right">
-                      Data: {formatArrayDate(r.competenceDate)}
-                    </Typography>
-                  </Box>
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
-                  <Typography variant="h6" color="textSecondary" textAlign="center">
-                      {r.transactionDTO.description}
-                    </Typography>
-                  </Box>
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Typography variant="body1" color="textSecondary" sx={{fontWeight: 'bold'}}>
-                      Valor: {formatCurrency(r.amount)}
-                      {isInstallment(r) && ` (Parcela ${r.metadata.installment}/${r.metadata.total_installments})`}
-                    </Typography>
-                    <Typography variant="body1" textAlign="right">Categoria: {r.transactionDTO.categoryName}</Typography>
-                  </Box>
-                  <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
-                    <Box flexGrow={1}>
-                      {r.bankName && <Typography variant="body1">Banco: {r.bankName}</Typography>}
-                    </Box>
-                    <Box display="flex" justifyContent="flex-end">
-                      {r.status === 3 || r.status === 1 ? (
-                        <Tooltip title="Deletar">
-                          <IconButton onClick={() => handleDelete(r)} color="error">
-                            <Delete />
-                          </IconButton>
-                        </Tooltip>
-                      ) : (
-                        <>
-                          <Tooltip title="Liquidar">
-                            <IconButton onClick={() => handleLiquidate(r)} color="success">
-                              <Check />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Editar">
-                            <IconButton onClick={() => handleEdit(r)} color="primary">
-                              <Edit />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Cancelar">
-                            <IconButton onClick={() => handleCancel(r)} color="error">
-                              <Clear />
-                            </IconButton>
-                          </Tooltip>
-                        </>
-                      )}
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
+                {loading ? "Pesquisando..." : "Pesquisar"}
+              </Button>
+
+              <Button
+                variant="outlined"
+                onClick={handleMenuClick}
+                disabled={loading || transactions.length === 0}
+                startIcon={<SortRounded />}
+                sx={{
+                  minHeight: 48,
+                  borderRadius: "14px",
+                  textTransform: "none",
+                  fontWeight: 600,
+                  px: 2.5,
+                }}
+              >
+                Classificar:{" "}
+                {sortOption === "dataC"
+                  ? "Data (crescente)"
+                  : sortOption === "dataD"
+                  ? "Data (decrescente)"
+                  : sortOption === "valorC"
+                  ? "Valor (crescente)"
+                  : sortOption === "valorD"
+                  ? "Valor (decrescente)"
+                  : sortOption === "categoriaC"
+                  ? "Categoria (crescente)"
+                  : "Categoria (decrescente)"}
+              </Button>
+            </Stack>
+          </Stack>
+        </Paper>
+
+        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
+          <MenuItem onClick={() => handleMenuClose("dataC")}>Data crescente</MenuItem>
+          <MenuItem onClick={() => handleMenuClose("dataD")}>Data decrescente</MenuItem>
+          <MenuItem onClick={() => handleMenuClose("valorC")}>Valor crescente</MenuItem>
+          <MenuItem onClick={() => handleMenuClose("valorD")}>Valor decrescente</MenuItem>
+          <MenuItem onClick={() => handleMenuClose("categoriaC")}>Categoria crescente</MenuItem>
+          <MenuItem onClick={() => handleMenuClose("categoriaD")}>Categoria decrescente</MenuItem>
+        </Menu>
+
+        <Box sx={{ mb: 2 }}>
+          <Typography sx={{ fontWeight: 700, color: "#0f172a", fontSize: "1.1rem" }}>
+            Resultados
+          </Typography>
+          <Typography sx={{ color: "#64748b", fontSize: "0.95rem" }}>
+            {transactions.length} transação(ões) encontrada(s).
+          </Typography>
+        </Box>
+
+        <Grid container spacing={3}>
+          {transactions.map((r) => {
+            const isReceipt = r.transactionDTO.categoryDTO.type === 0;
+            const statusStyle = getStatusStyles(r.status);
+
+            return (
+              <Grid item xs={12} md={6} xl={4} key={r.id}>
+                <Card
+                  elevation={0}
+                  sx={{
+                    height: "100%",
+                    borderRadius: "24px",
+                    border: "1px solid rgba(15, 23, 42, 0.08)",
+                    backgroundColor: "#ffffff",
+                    boxShadow: "0 12px 32px rgba(15, 23, 42, 0.05)",
+                  }}
+                >
+                  <CardContent sx={{ p: 3 }}>
+                    <Stack spacing={2.5}>
+                      <Box
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="flex-start"
+                        gap={1.5}
+                        flexWrap="wrap"
+                      >
+                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                          <Chip
+                            label={isReceipt ? "Receita" : "Despesa"}
+                            sx={{
+                              fontWeight: 700,
+                              color: isReceipt ? "#166534" : "#b91c1c",
+                              backgroundColor: isReceipt ? "#dcfce7" : "#fee2e2",
+                            }}
+                          />
+                          <Chip
+                            label={getStatusLabel(r.status)}
+                            sx={{
+                              fontWeight: 700,
+                              color: statusStyle.color,
+                              backgroundColor: statusStyle.backgroundColor,
+                            }}
+                          />
+                        </Stack>
+
+                        <Typography
+                          sx={{
+                            color: "#64748b",
+                            fontSize: "0.9rem",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {formatArrayDate(r.competenceDate)}
+                        </Typography>
+                      </Box>
+
+                      <Box>
+                        <Typography
+                          sx={{
+                            fontSize: "1.1rem",
+                            fontWeight: 700,
+                            color: "#0f172a",
+                            lineHeight: 1.3,
+                            mb: 0.6,
+                          }}
+                        >
+                          {r.transactionDTO.description}
+                        </Typography>
+
+                        <Typography
+                          sx={{
+                            color: "#64748b",
+                            fontSize: "0.95rem",
+                            lineHeight: 1.6,
+                          }}
+                        >
+                          Categoria: {r.transactionDTO.categoryName}
+                        </Typography>
+                      </Box>
+
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 2,
+                          borderRadius: "18px",
+                          backgroundColor: "#f8fafc",
+                          border: "1px solid rgba(15, 23, 42, 0.06)",
+                        }}
+                      >
+                        <Stack spacing={1}>
+                          <Typography
+                            sx={{
+                              fontSize: "1.25rem",
+                              fontWeight: 800,
+                              color: isReceipt ? "#166534" : "#b91c1c",
+                            }}
+                          >
+                            {isReceipt ? "+" : "-"} {formatCurrency(r.amount)}
+                          </Typography>
+
+                          {isInstallment(r) && (
+                            <Typography sx={{ color: "#64748b", fontSize: "0.92rem" }}>
+                              Parcela {r.metadata.installment}/{r.metadata.total_installments}
+                            </Typography>
+                          )}
+
+                          {r.bankName && (
+                            <Typography sx={{ color: "#475569", fontSize: "0.92rem" }}>
+                              Banco: {r.bankName}
+                            </Typography>
+                          )}
+                        </Stack>
+                      </Paper>
+
+                      <Divider />
+
+                      <Box
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        flexWrap="wrap"
+                        gap={1.5}
+                      >
+                        <Typography sx={{ color: "#94a3b8", fontSize: "0.85rem" }}>
+                          ID #{r.id}
+                        </Typography>
+
+                        <Stack direction="row" spacing={1}>
+                          {r.status === 3 || r.status === 1 ? (
+                            <Tooltip title="Deletar">
+                              <IconButton
+                                onClick={() => handleDelete(r)}
+                                sx={{
+                                  bgcolor: "rgba(239, 68, 68, 0.10)",
+                                  color: "#dc2626",
+                                  "&:hover": {
+                                    bgcolor: "rgba(239, 68, 68, 0.18)",
+                                  },
+                                }}
+                              >
+                                <Delete />
+                              </IconButton>
+                            </Tooltip>
+                          ) : (
+                            <>
+                              <Tooltip title="Liquidar">
+                                <IconButton
+                                  onClick={() => handleLiquidate(r)}
+                                  sx={{
+                                    bgcolor: "rgba(34, 197, 94, 0.12)",
+                                    color: "#16a34a",
+                                    "&:hover": {
+                                      bgcolor: "rgba(34, 197, 94, 0.20)",
+                                    },
+                                  }}
+                                >
+                                  <Check />
+                                </IconButton>
+                              </Tooltip>
+
+                              <Tooltip title="Editar">
+                                <IconButton
+                                  onClick={() => handleEdit(r)}
+                                  sx={{
+                                    bgcolor: "rgba(37, 99, 235, 0.10)",
+                                    color: "#2563eb",
+                                    "&:hover": {
+                                      bgcolor: "rgba(37, 99, 235, 0.18)",
+                                    },
+                                  }}
+                                >
+                                  <Edit />
+                                </IconButton>
+                              </Tooltip>
+
+                              <Tooltip title="Cancelar">
+                                <IconButton
+                                  onClick={() => handleCancel(r)}
+                                  sx={{
+                                    bgcolor: "rgba(239, 68, 68, 0.10)",
+                                    color: "#dc2626",
+                                    "&:hover": {
+                                      bgcolor: "rgba(239, 68, 68, 0.18)",
+                                    },
+                                  }}
+                                >
+                                  <Clear />
+                                </IconButton>
+                              </Tooltip>
+                            </>
+                          )}
+                        </Stack>
+                      </Box>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              </Grid>
+            );
+          })}
         </Grid>
-      </Box>
 
-      <Modal open={openModalLiquidation} onClose={handleModalCloseLiquidation}>
-        <Box sx={{
-          position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", 
-          bgcolor: "background.paper", padding: 4, borderRadius: 2, boxShadow: 3, maxWidth:"80%"
-        }}>
-          <Typography variant="h6" gutterBottom>Liquidar Transação</Typography>
-
-          <BankDirective
-            value={selectedBankAccountLiquidation!}
-            multiple={false}
-            onChange={(value) => setSelectedBankAccountLiquidation(Array.isArray(value) ? value[0] : value)}
-          />
-
-          <TextField
-            label="Data de Pagamento"
-            type="date"
-            value={paymentDateLiquidation}
-            onChange={(e) => setPaymentDateLiquidation(e.target.value)}
-            fullWidth
-            sx={{ mt: 2 }}
-            InputLabelProps={{
-              shrink: true,
+        <Modal open={openModalLiquidation} onClose={handleModalCloseLiquidation}>
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: { xs: "92%", sm: 520 },
+              bgcolor: "background.paper",
+              p: 3,
+              borderRadius: "24px",
+              boxShadow: 24,
             }}
-          />
+          >
+            <Typography sx={{ fontSize: "1.2rem", fontWeight: 700, mb: 2 }}>
+              Liquidar transação
+            </Typography>
 
-          <Box display="flex" justifyContent="space-between" sx={{ mt: 2, gap: 2 }}>
-            <Button variant="outlined" onClick={handleModalCloseLiquidation}>Fechar</Button>
-            <Button variant="contained" color="primary" onClick={handleConfirmLiquidation}>Confirmar</Button>
-          </Box>
-        </Box>
-      </Modal>
+            <Stack spacing={2}>
+              <BankDirective
+                value={selectedBankAccountLiquidation!}
+                multiple={false}
+                onChange={(value) =>
+                  setSelectedBankAccountLiquidation(Array.isArray(value) ? value[0] : value)
+                }
+              />
 
-      <Modal open={openEditModal} onClose={handleEditClose}>
-        <Box sx={{ width: 400, padding: 4, margin: "auto", mt: 10, backgroundColor: "white", borderRadius: 2, maxWidth:"80%"}}>
-          <Typography variant="h6" gutterBottom>
-            Editar Transação
-          </Typography>
-          <TextField
-            label="Valor"
-            type="number"
-            fullWidth
-            value={editData?.updatedAmount || ""}
-            onChange={(e) => setEditData({ ...editData, updatedAmount: parseFloat(e.target.value) })}
-            sx={{ mb: 2 }}
-          />
-          <Typography variant="body1" gutterBottom>
-            Categoria original: {editData?.originalCategoryName}
-          </Typography>
-          <CategoryEntityDirective
-            multiple={false} // Seleção única
-            showOnlyReceiptOrExpense={
-              editData?.transactionDTO?.categoryDTO?.type === 0 ? "receipt" : "expense"
-            } // Define o tipo de categoria com base no type
-            value={editData?.updatedCategory} // Valor atual como entidade ou null
-            onChange={(newValue) => {
-              console.log("newValue", newValue)
-              setEditData({
-                ...editData,
-                updatedCategory: newValue,
-              });
-            }} // Atualiza o estado com a nova categoria
-          />
-          <TextField
-            label="Data de Competência"
-            type="date"
-            fullWidth
-            value={editData?.updatedCompetenceDate || ""}
-            onChange={(e) => setEditData({ ...editData, updatedCompetenceDate: e.target.value })}
-            InputLabelProps={{ shrink: true }}
-            sx={{mt: 2}}
-          />
-          <Box display="flex" justifyContent="space-between" mt={3}>
-            <Button variant="outlined" color="secondary" onClick={handleEditClose}>
-              Cancelar
-            </Button>
-            <Button variant="contained" color="primary" onClick={handleEditSave}>
-              Salvar Alterações
-            </Button>
+              <TextField
+                label="Data de pagamento"
+                type="date"
+                value={paymentDateLiquidation}
+                onChange={(e) => setPaymentDateLiquidation(e.target.value)}
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              />
+
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} justifyContent="flex-end">
+                <Button variant="outlined" onClick={handleModalCloseLiquidation}>
+                  Fechar
+                </Button>
+                <Button variant="contained" onClick={handleConfirmLiquidation}>
+                  Confirmar
+                </Button>
+              </Stack>
+            </Stack>
           </Box>
-        </Box>
-      </Modal>
-        <Dialog
-          open={isDialogOpen}
-          onClose={() => setIsDialogOpen(false)}
-          aria-labelledby="confirm-dialog-title"
-          aria-describedby="confirm-dialog-description"
-        >
-          <DialogTitle id="confirm-dialog-title">Confirmar Alterações</DialogTitle>
+        </Modal>
+
+        <Modal open={openEditModal} onClose={handleEditClose}>
+          <Box
+            sx={{
+              width: { xs: "92%", sm: 520 },
+              p: 3,
+              mx: "auto",
+              mt: 8,
+              backgroundColor: "white",
+              borderRadius: "24px",
+              boxShadow: 24,
+            }}
+          >
+            <Typography sx={{ fontSize: "1.2rem", fontWeight: 700, mb: 2.5 }}>
+              Editar transação
+            </Typography>
+
+            <Stack spacing={2}>
+              <TextField
+                label="Valor"
+                type="number"
+                fullWidth
+                value={editData?.updatedAmount || ""}
+                onChange={(e) =>
+                  setEditData({ ...editData, updatedAmount: parseFloat(e.target.value) })
+                }
+              />
+
+              <Typography variant="body2" sx={{ color: "#64748b" }}>
+                Categoria original: {editData?.originalCategoryName}
+              </Typography>
+
+              <CategoryEntityDirective
+                multiple={false}
+                showOnlyReceiptOrExpense={
+                  editData?.transactionDTO?.categoryDTO?.type === 0 ? "receipt" : "expense"
+                }
+                value={editData?.updatedCategory}
+                onChange={(newValue) => {
+                  setEditData({
+                    ...editData,
+                    updatedCategory: newValue,
+                  });
+                }}
+              />
+
+              <TextField
+                label="Data de competência"
+                type="date"
+                fullWidth
+                value={editData?.updatedCompetenceDate || ""}
+                onChange={(e) =>
+                  setEditData({ ...editData, updatedCompetenceDate: e.target.value })
+                }
+                InputLabelProps={{ shrink: true }}
+              />
+
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} justifyContent="flex-end">
+                <Button variant="outlined" color="secondary" onClick={handleEditClose}>
+                  Cancelar
+                </Button>
+                <Button variant="contained" onClick={handleEditSave}>
+                  Salvar alterações
+                </Button>
+              </Stack>
+            </Stack>
+          </Box>
+        </Modal>
+
+        <Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
+          <DialogTitle>Confirmar alterações</DialogTitle>
           <DialogContent>
-            <DialogContentText id="confirm-dialog-description">
+            <DialogContentText component="div">
               Você está prestes a:
               <ul>
-              {dialogMessages.map((message, index) => (
-                <li key={index}>{message}</li>
-              ))}
-            </ul>
-            Deseja confirmar?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsDialogOpen(false)} color="secondary">
-            Cancelar
-          </Button>
-          <Button onClick={confirmEdit} color="primary" autoFocus>
-            Confirmar
-          </Button>
-        </DialogActions>
-      </Dialog>
+                {dialogMessages.map((message, index) => (
+                  <li key={index}>{message}</li>
+                ))}
+              </ul>
+              Deseja confirmar?
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setIsDialogOpen(false)} color="secondary">
+              Cancelar
+            </Button>
+            <Button onClick={confirmEdit} autoFocus>
+              Confirmar
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-      <Dialog
-        open={openCancelDialog}
-        onClose={closeDialogCancelDelete}
-        aria-labelledby="cancel-dialog-title"
-        aria-describedby="cancel-dialog-description"
-      >
-        <DialogTitle id="cancel-dialog-title">Confirmar Cancelamento</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="cancel-dialog-description">
-            Você tem certeza de que deseja cancelar esta transação?
-            {isInstallment(selectedTransactionCancelDelete) &&
-              <div>
-                <br />
-                <strong>Atenção:</strong> Esta transação é parcelada. O cancelamento desta parcela irá cancelar todas as outras parcelas associadas.
-              </div>
-            }
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeDialogCancelDelete} color="secondary">
-            Cancelar
-          </Button>
-          <Button onClick={confirmCancel} color="primary" autoFocus>
-            Confirmar
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <Dialog open={openCancelDialog} onClose={closeDialogCancelDelete}>
+          <DialogTitle>Confirmar cancelamento</DialogTitle>
+          <DialogContent>
+            <DialogContentText component="div">
+              Você tem certeza de que deseja cancelar esta transação?
+              {isInstallment(selectedTransactionCancelDelete) && (
+                <Box sx={{ mt: 2 }}>
+                  <strong>Atenção:</strong> Esta transação é parcelada. O cancelamento desta
+                  parcela irá cancelar todas as outras parcelas associadas.
+                </Box>
+              )}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={closeDialogCancelDelete} color="secondary">
+              Voltar
+            </Button>
+            <Button onClick={confirmCancel} autoFocus>
+              Confirmar
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-      <Dialog
-        open={openDeleteDialog}
-        onClose={closeDialogCancelDelete}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">Confirmar Deleção</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description">
-            Você tem certeza de que deseja deletar esta transação?
-            {isInstallment(selectedTransactionCancelDelete) &&
-              <div>
-                <br />
-                <strong>Atenção:</strong> Esta transação é parcelada. A deleção desta parcela irá deletar todas as outras parcelas associadas.
-              </div>
-            }
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeDialogCancelDelete} color="secondary">
-            Cancelar
-          </Button>
-          <Button onClick={confirmDelete} color="primary" autoFocus>
-            Confirmar
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+        <Dialog open={openDeleteDialog} onClose={closeDialogCancelDelete}>
+          <DialogTitle>Confirmar exclusão</DialogTitle>
+          <DialogContent>
+            <DialogContentText component="div">
+              Você tem certeza de que deseja deletar esta transação?
+              {isInstallment(selectedTransactionCancelDelete) && (
+                <Box sx={{ mt: 2 }}>
+                  <strong>Atenção:</strong> Esta transação é parcelada. A exclusão desta parcela
+                  irá deletar todas as outras parcelas associadas.
+                </Box>
+              )}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={closeDialogCancelDelete} color="secondary">
+              Voltar
+            </Button>
+            <Button onClick={confirmDelete} autoFocus>
+              Confirmar
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Container>
+    </Box>
   );
 };
 

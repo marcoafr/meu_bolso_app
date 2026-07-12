@@ -1,78 +1,104 @@
-import { useEffect, useState } from 'react';
-import { Typography, Container, Box, List, ListItem, ListItemText, CircularProgress, Alert, Modal, Button, TextField, IconButton, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
-import { useAuth } from '../authenticationContext'; 
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { categoryService } from '../api/categoryService';
-import { useSnackbar } from '../directives/snackbar/SnackbarContext';
+import { useEffect, useState } from "react";
+import {
+  Typography,
+  Container,
+  Box,
+  CircularProgress,
+  Alert,
+  Modal,
+  Button,
+  TextField,
+  IconButton,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Paper,
+  Stack,
+  Chip,
+  Grid,
+} from "@mui/material";
+import { useAuth } from "../authenticationContext";
+import {
+  AddRounded,
+  EditRounded,
+  DeleteOutlineRounded,
+} from "@mui/icons-material";
+import { categoryService } from "../api/categoryService";
+import { useSnackbar } from "../directives/snackbar/SnackbarContext";
 
 const Categories = () => {
-  const { user } = useAuth(); // Pegando o user do contexto de autenticação
-  const { showSnackbar } = useSnackbar(); // Usando o hook do Snackbar
+  const { user } = useAuth();
+  const { showSnackbar } = useSnackbar();
 
-  // Estados para categorias
   const [categories, setCategories] = useState<any[]>([]);
   const [loadingCategories, setLoadingCategories] = useState<boolean>(false);
   const [errorCategories, setErrorCategories] = useState<string | null>(null);
 
-  // Estados para modais
   const [openCategoryModal, setOpenCategoryModal] = useState(false);
 
-  // Estados para formulários
-  const [newCategory, setNewCategory] = useState({ id: null, name: '', type: 0 });
-  const [editingCategory, setEditingCategory] = useState<any>(null); 
+  const [newCategory, setNewCategory] = useState({
+    id: null,
+    name: "",
+    type: 0,
+  });
 
-  // Estados para inativação
+  const [editingCategory, setEditingCategory] = useState<any>(null);
+
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
 
-  // Função para abrir o modal de exclusão e definir o item selecionado
-  const openModalDeleteConfirmation = (item) => {
+  const sectionCardStyle = {
+    p: { xs: 2.5, md: 3 },
+    borderRadius: "24px",
+    border: "1px solid rgba(15, 23, 42, 0.08)",
+    backgroundColor: "#ffffff",
+    boxShadow: "0 10px 30px rgba(15, 23, 42, 0.04)",
+  };
+
+  const openModalDeleteConfirmation = (item: any) => {
     setSelectedItem(item);
     setOpenDeleteModal(true);
   };
-  
-  // Função para fechar o modal
+
   const closeDeleteModal = () => {
     setOpenDeleteModal(false);
     setSelectedItem(null);
   };
 
-  // Função para excluir ou inativar o item
   const handleDeleteConfirmation = async () => {
     if (selectedItem) {
-      const updatedItem = { ...selectedItem, status: 1 }; // Define o status como 1 (inactive)
+      const updatedItem = { ...selectedItem, status: 1 };
 
       try {
         await categoryService.editCategory(updatedItem);
-        // Fechar o modal após a ação
         search();
         closeDeleteModal();
-        showSnackbar("Deleção bem-sucedida!", "success"); 
-        // Realize outras ações, como atualizar o estado ou mostrar sucesso
+        showSnackbar("Categoria desativada com sucesso!", "success");
       } catch (error) {
-        console.error("Erro ao atualizar o item:", error);
-        // Aqui você pode adicionar uma mensagem de erro ou outras ações
-        showSnackbar("Deleção mal-sucedida!", "error"); 
+        console.error("Erro ao atualizar item:", error);
+        showSnackbar("Não foi possível desativar a categoria.", "error");
       }
     }
   };
 
   const search = () => {
-    // Busca categorias do usuário
-    if (!user || !user.id) return; // Se o user não estiver disponível, não faz a requisição
+    if (!user || !user.id) return;
 
-    // Carregamento das categorias
     setLoadingCategories(true);
+    setErrorCategories(null);
+
     categoryService
       .getCategoriesByUserId(user.id)
       .then((data) => {
-        // Ordenar os dados primeiro por 'type' (0 antes de 1) e depois por 'name'
-        const sortedData = data.sort((a, b) => {
-          // Ordena por 'type' (0 primeiro, depois 1)
+        const sortedData = data.sort((a: any, b: any) => {
           if (a.type !== b.type) {
             return a.type - b.type;
           }
-          // Se 'type' for igual, ordena por 'name'
           return a.name.localeCompare(b.name);
         });
 
@@ -80,175 +106,360 @@ const Categories = () => {
         setLoadingCategories(false);
       })
       .catch(() => {
-        setErrorCategories('Erro ao carregar categorias');
+        setErrorCategories("Erro ao carregar categorias.");
         setLoadingCategories(false);
       });
-  }
-  
+  };
+
   useEffect(() => {
-    search()
+    search();
   }, [user]);
 
   const openModalForCategory = (category: any = null) => {
     setEditingCategory(category);
+
     if (category) {
-      setNewCategory({ id: category.id, name: category.name, type: category.type });
+      setNewCategory({
+        id: category.id,
+        name: category.name,
+        type: category.type,
+      });
     } else {
-      setNewCategory({ id: null, name: '', type: 0 });
+      setNewCategory({
+        id: null,
+        name: "",
+        type: 0,
+      });
     }
+
     setOpenCategoryModal(true);
   };
 
   const handleCategorySubmit = () => {
+    if (!newCategory.name.trim()) {
+      showSnackbar("O nome da categoria é obrigatório.", "warning");
+      return;
+    }
+
     if (editingCategory) {
-      // Atualizar categoria existente
-      const finalEditingCategory = {...newCategory} 
+      const finalEditingCategory = { ...newCategory };
+
       categoryService
         .editCategory(finalEditingCategory)
-        .then((data) => {
+        .then(() => {
           search();
-          showSnackbar("Edição bem-sucedida!", "success"); 
+          showSnackbar("Categoria editada com sucesso!", "success");
         })
         .catch(() => {
-          setErrorCategories('Erro ao editar categoria');
-          showSnackbar("Edição mal-sucedida!", "error"); 
+          setErrorCategories("Erro ao editar categoria.");
+          showSnackbar("Não foi possível editar a categoria.", "error");
           setLoadingCategories(false);
         });
     } else {
-      // Adicionar nova categoria
-      const finalCreatingCategory = {name: newCategory.name, type: newCategory.type } 
+      const finalCreatingCategory = {
+        name: newCategory.name,
+        type: newCategory.type,
+      };
+
       categoryService
-        .addCategory({...finalCreatingCategory, userId: user?.id})
-        .then((data) => {
+        .addCategory({ ...finalCreatingCategory, userId: user?.id })
+        .then(() => {
           search();
-          showSnackbar("Criação bem-sucedida!", "success"); 
+          showSnackbar("Categoria criada com sucesso!", "success");
         })
         .catch(() => {
-          setErrorCategories('Erro ao adicionar categoria');
-          showSnackbar("Edição mal-sucedida!", "error"); 
+          setErrorCategories("Erro ao adicionar categoria.");
+          showSnackbar("Não foi possível criar a categoria.", "error");
           setLoadingCategories(false);
-        });    
+        });
     }
+
     setOpenCategoryModal(false);
     setEditingCategory(null);
   };
 
   return (
-    <Container>
-      {/* Sessão de categorias */}
-      <Box display="flex" flexDirection="column" alignItems="center" justifyContent="space-between">
-        <Box display="flex" alignItems="center" mb={2}>
-          <Typography variant="h4">Categorias</Typography>
-          <IconButton color="primary" onClick={() => openModalForCategory()}>
-            <AddIcon />
-          </IconButton>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        background: "#f8fafc",
+        py: { xs: 4, md: 5 },
+      }}
+    >
+      <Container maxWidth="lg">
+        <Box sx={{ mb: 4 }}>
+          <Typography
+            sx={{
+              color: "primary.main",
+              fontWeight: 700,
+              fontSize: "0.82rem",
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              mb: 1,
+            }}
+          >
+            Organização
+          </Typography>
+
+          <Typography
+            sx={{
+              fontSize: { xs: "2rem", md: "2.5rem" },
+              fontWeight: 800,
+              color: "#0f172a",
+              lineHeight: 1.1,
+              mb: 1.2,
+            }}
+          >
+            Categorias
+          </Typography>
+
+          <Typography
+            sx={{
+              color: "#64748b",
+              fontSize: { xs: "0.98rem", md: "1.02rem" },
+              lineHeight: 1.7,
+              maxWidth: "760px",
+            }}
+          >
+            Gerencie suas categorias de receita e despesa para manter suas
+            transações organizadas e fáceis de analisar.
+          </Typography>
         </Box>
 
+        <Paper elevation={0} sx={{ ...sectionCardStyle, mb: 3 }}>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={2}
+            justifyContent="space-between"
+            alignItems={{ xs: "stretch", sm: "center" }}
+          >
+            <Box>
+              <Typography
+                sx={{
+                  fontSize: "1.1rem",
+                  fontWeight: 700,
+                  color: "#0f172a",
+                  mb: 0.5,
+                }}
+              >
+                Lista de categorias
+              </Typography>
+
+              <Typography sx={{ color: "#64748b", fontSize: "0.95rem" }}>
+                {categories.length} categoria(s) cadastrada(s).
+              </Typography>
+            </Box>
+
+            <Button
+              variant="contained"
+              startIcon={<AddRounded />}
+              onClick={() => openModalForCategory()}
+              sx={{
+                minHeight: 48,
+                borderRadius: "14px",
+                textTransform: "none",
+                fontWeight: 700,
+                px: 2.5,
+                boxShadow: "none",
+              }}
+            >
+              Nova categoria
+            </Button>
+          </Stack>
+        </Paper>
+
         {loadingCategories ? (
-          <Box display="flex" justifyContent="center" my={2}>
+          <Box display="flex" justifyContent="center" my={6}>
             <CircularProgress />
           </Box>
         ) : errorCategories ? (
-          <Alert severity="error">{errorCategories}</Alert>
+          <Alert severity="error" sx={{ borderRadius: "16px" }}>
+            {errorCategories}
+          </Alert>
         ) : (
-          <List sx={{width: '100%'}}>
-            {categories.map((category) => (
-              <ListItem
-                key={category.id}
-                sx={{
-                  backgroundColor: category.type == 0 ? '#bcff70' : '#fd7557',
-                  borderRadius: '8px',
-                  marginBottom: '10px',
-                  padding: '10px',
-                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  transition: 'background-color 0.3s ease',
-                  '&:hover': {
-                    backgroundColor: category.type == 0 ? '#bcff7080' : '#fd755780',
-                  },
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <ListItemText
-                    primary={`Categoria: ${category.name}`}
-                    secondary={`Tipo: ${category.type == 0 ? 'Receita' : 'Despesa'}`}
+          <Grid container spacing={3}>
+            {categories.map((category) => {
+              const isReceipt = category.type === 0;
+
+              return (
+                <Grid item xs={12} md={6} key={category.id}>
+                  <Paper
+                    elevation={0}
                     sx={{
-                      backgroundColor: '#ffffff',
-                      borderRadius: '4px',
-                      padding: '5px',
-                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                      p: 3,
+                      borderRadius: "24px",
+                      border: "1px solid rgba(15, 23, 42, 0.08)",
+                      backgroundColor: "#ffffff",
+                      boxShadow: "0 12px 32px rgba(15, 23, 42, 0.05)",
+                      transition: "all 0.25s ease",
+                      "&:hover": {
+                        transform: "translateY(-3px)",
+                        boxShadow: "0 18px 36px rgba(15, 23, 42, 0.08)",
+                      },
                     }}
-                  />
-                  <Box sx={{ 
-                    backgroundColor: '#ffffff', 
-                    borderRadius: '50%', 
-                    padding: '5px', 
-                    marginLeft: '5px' 
-                  }}>
-                    <IconButton color="primary" onClick={() => openModalForCategory(category)}>
-                      <EditIcon />
-                    </IconButton>
-                  </Box>
-                  <Box sx={{ 
-                    backgroundColor: '#ffffff', 
-                    borderRadius: '50%', 
-                    padding: '5px', 
-                    marginLeft: '5px' 
-                  }}>
-                    <IconButton color="primary" onClick={() => openModalDeleteConfirmation(category)}>
-                      <DeleteIcon />
-                    </IconButton>
-                  </Box>
-                </Box>
-              </ListItem>
-            ))}
-          </List>
+                  >
+                    <Stack spacing={2}>
+                      <Box
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="flex-start"
+                        gap={2}
+                        flexWrap="wrap"
+                      >
+                        <Box>
+                          <Typography
+                            sx={{
+                              fontSize: "1.15rem",
+                              fontWeight: 700,
+                              color: "#0f172a",
+                              lineHeight: 1.25,
+                              mb: 0.8,
+                            }}
+                          >
+                            {category.name}
+                          </Typography>
+
+                          <Chip
+                            label={isReceipt ? "Receita" : "Despesa"}
+                            sx={{
+                              fontWeight: 700,
+                              color: isReceipt ? "#166534" : "#b91c1c",
+                              backgroundColor: isReceipt ? "#dcfce7" : "#fee2e2",
+                            }}
+                          />
+                        </Box>
+
+                        <Stack direction="row" spacing={1}>
+                          <IconButton
+                            onClick={() => openModalForCategory(category)}
+                            sx={{
+                              bgcolor: "rgba(37, 99, 235, 0.10)",
+                              color: "#2563eb",
+                              "&:hover": {
+                                bgcolor: "rgba(37, 99, 235, 0.18)",
+                              },
+                            }}
+                          >
+                            <EditRounded />
+                          </IconButton>
+
+                          <IconButton
+                            onClick={() => openModalDeleteConfirmation(category)}
+                            sx={{
+                              bgcolor: "rgba(239, 68, 68, 0.10)",
+                              color: "#dc2626",
+                              "&:hover": {
+                                bgcolor: "rgba(239, 68, 68, 0.18)",
+                              },
+                            }}
+                          >
+                            <DeleteOutlineRounded />
+                          </IconButton>
+                        </Stack>
+                      </Box>
+                    </Stack>
+                  </Paper>
+                </Grid>
+              );
+            })}
+          </Grid>
         )}
-        {/* Modal de adicionar/editar categoria */}
+
         <Modal open={openCategoryModal} onClose={() => setOpenCategoryModal(false)}>
-          <Box p={3} bgcolor="white" borderRadius={2} mx="auto" my={5} width={400} maxWidth="80%">
-            <Typography variant="h6">{editingCategory ? 'Editar Categoria' : 'Adicionar Categoria'}</Typography>
-            <TextField
-              label="Nome da Categoria"
-              fullWidth
-              value={newCategory.name}
-              onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
-              margin="normal"
-            />
-            <FormControl fullWidth margin="normal">
-              <InputLabel id="category-type-label">Tipo</InputLabel>
-              <Select
-                labelId="category-type-label"
-                value={newCategory.type}
-                onChange={(e) => setNewCategory({ ...newCategory, type: Number(e.target.value) })}
-                label="Tipo"
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: { xs: "92%", sm: 460 },
+              bgcolor: "background.paper",
+              p: 3,
+              borderRadius: "24px",
+              boxShadow: 24,
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: "1.2rem",
+                fontWeight: 700,
+                color: "#0f172a",
+                mb: 2.5,
+              }}
+            >
+              {editingCategory ? "Editar categoria" : "Nova categoria"}
+            </Typography>
+
+            <Stack spacing={2}>
+              <TextField
+                label="Nome da categoria"
+                fullWidth
+                value={newCategory.name}
+                onChange={(e) =>
+                  setNewCategory({ ...newCategory, name: e.target.value })
+                }
+              />
+
+              <FormControl fullWidth>
+                <InputLabel id="category-type-label">Tipo</InputLabel>
+                <Select
+                  labelId="category-type-label"
+                  value={newCategory.type}
+                  label="Tipo"
+                  onChange={(e) =>
+                    setNewCategory({
+                      ...newCategory,
+                      type: Number(e.target.value),
+                    })
+                  }
+                >
+                  <MenuItem value={0}>Receita</MenuItem>
+                  <MenuItem value={1}>Despesa</MenuItem>
+                </Select>
+              </FormControl>
+
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={2}
+                justifyContent="flex-end"
               >
-                <MenuItem value={0}>Receita</MenuItem>
-                <MenuItem value={1}>Despesa</MenuItem>
-              </Select>
-            </FormControl>
-            <Button variant="contained" fullWidth onClick={handleCategorySubmit}>
-              {editingCategory ? 'Salvar Alterações' : 'Adicionar'}
-            </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => setOpenCategoryModal(false)}
+                >
+                  Cancelar
+                </Button>
+
+                <Button variant="contained" onClick={handleCategorySubmit}>
+                  {editingCategory ? "Salvar alterações" : "Adicionar categoria"}
+                </Button>
+              </Stack>
+            </Stack>
           </Box>
         </Modal>
-      </Box>
 
-      {/* Modal de Confirmação */}
-      <Dialog open={openDeleteModal} onClose={closeDeleteModal}>
-        <DialogTitle>Confirmar Exclusão</DialogTitle>
-        <DialogContent>
-          <p>Você tem certeza que deseja desativar esta categoria?</p>
-          <p>Tipo: {selectedItem?.type == 0 ? 'Receita' : "Despesa"}?</p>
-          <p>Nome: {selectedItem != null ? selectedItem?.name : "N/I"}?</p>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeDeleteModal} color="primary">Cancelar</Button>
-          <Button onClick={handleDeleteConfirmation} color="secondary">Confirmar</Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+        <Dialog open={openDeleteModal} onClose={closeDeleteModal}>
+          <DialogTitle>Confirmar desativação</DialogTitle>
+          <DialogContent>
+            <Typography sx={{ mb: 1.5 }}>
+              Você tem certeza que deseja desativar esta categoria?
+            </Typography>
+            <Typography variant="body2" sx={{ color: "#475569" }}>
+              Tipo: {selectedItem?.type === 0 ? "Receita" : "Despesa"}
+            </Typography>
+            <Typography variant="body2" sx={{ color: "#475569" }}>
+              Nome: {selectedItem?.name || "N/I"}
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={closeDeleteModal}>Cancelar</Button>
+            <Button onClick={handleDeleteConfirmation} color="error" variant="contained">
+              Confirmar
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Container>
+    </Box>
   );
 };
 
